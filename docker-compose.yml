@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  ollama:
+    build:
+      context: ./Pardos/assistant
+    container_name: ollama
+    expose:
+      - "11434"
+    networks:
+      - pardos-network
+
+  pardos-backend:
+    build:
+      context: ./sistemPardo/backend
+    container_name: pardos-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - OLLAMA_URL=http://ollama:11434
+    networks:
+      - pardos-network
+
+networks:
+  pardos-network:
+    driver: bridge

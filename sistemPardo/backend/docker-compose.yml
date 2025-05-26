@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  ollama:
+    build:
+      context: ./ollama  # Asegurate que la carpeta sea la correcta
+    container_name: ollama
+    ports:
+      - "11434:11434"  # Solo si querés exponerlo al host (opcional)
+    networks:
+      - pardos-network
+
+  pardos-backend:
+    build: .
+    container_name: pardos-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - OLLAMA_URL=http://ollama:11434  # <- aquí configurás el backend para apuntar al contenedor Ollama
+    networks:
+      - pardos-network
+
+networks:
+  pardos-network:
+    driver: bridge
