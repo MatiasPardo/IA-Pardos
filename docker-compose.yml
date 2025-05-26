@@ -3,7 +3,7 @@ version: '3.8'
 services:
   ollama:
     build:
-      context: ./Pardos/assistant
+      context: ./assistant
     container_name: ollama
     expose:
       - "11434"
