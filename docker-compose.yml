@@ -1,9 +1,9 @@
-
 version: '3.8'
 
 services:
   ollama:
-    image: matiaspardo/ia-pardo-ollama:latest
+    build:
+      context: ./assistant
     container_name: ollama
     expose:
       - "11434"
@@ -11,24 +11,14 @@ services:
       - pardos-network
 
   pardos-backend:
-    image: matiaspardo/ia-pardo-pardos-backend:latest
+    build:
+      context: ./sistemPardo/backend
     container_name: pardos-backend
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
       - OLLAMA_URL=http://ollama:11434
-    networks:
-      - pardos-network
-
-  frontend:
-    image: nginx:alpine
-    container_name: pardos-frontend
-    volumes:
-      - ./sistemPardo/frontend:/usr/share/nginx/html:ro
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    ports:
-      - "80:80"
     networks:
       - pardos-network
 
