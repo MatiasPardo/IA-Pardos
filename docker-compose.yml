@@ -1,3 +1,4 @@
+
 services:
   ollama:
     build:
@@ -12,11 +13,24 @@ services:
     build:
       context: ./sistemPardo/backend
     container_name: pardos-backend
-    ports:
-      - "3000:3000"
     environment:
       - NODE_ENV=production
       - OLLAMA_URL=http://ollama:11434
+    expose:
+      - "3000"
+    networks:
+      - pardos-network
+
+  frontend:
+    image: nginx:alpine
+    container_name: pardos-frontend
+    volumes:
+      - ./sistemPardo/frontend:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - pardos-backend
     networks:
       - pardos-network
 

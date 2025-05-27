@@ -1,14 +1,91 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Presentación de Matías Pardo</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pablo Matias Pardo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Bienvenido al sitio de Matías Pardo</h1>
-    <p>Este sitio presenta a Matías Pardo y permite chatear con su asistente virtual.</p>
-    <a href="chat/index.html">Ir al chat con Matías Pardo</a>
+  <div class="container">
+    <h1>Pablo Matias Pardo</h1>
+    <div class="intro">
+      <p>Soy desarrollador especializado en backend con experiencia en arquitectura de sistemas, DevOps y ciberseguridad. Me apasionan las tecnologías limpias, escalables y la inteligencia artificial aplicada a casos reales.</p>
+      <div class="btns">
+        <a href="https://www.linkedin.com/in/mspardos/" target="_blank" class="linkedin">LinkedIn</a>
+        <a href="https://github.com/MatiasPardo" target="_blank" class="github">GitHub</a>
+      </div>
+    </div>
+
+    <h2>Proyectos destacados</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Email API</h3>
+        <p>API en Spring Boot para el envío de correos de forma programática.</p>
+        <div class="tags">
+          <span>Spring Boot</span><span>Java</span>
+        </div>
+        <a href="https://github.com/MatiasPardo/EmailAPI" target="_blank">Ver más</a>
+      </div>
+      <div class="card">
+        <h3>SDK E-commerce</h3>
+        <p>SDK para integración con Producteca, Tiendanube y Magento2.</p>
+        <div class="tags">
+          <span>Producteca</span><span>TiendaNube</span><span>Magento2</span>
+        </div>
+        <a href="https://github.com/MatiasPardo/Producteca" target="_blank">Ver más</a>
+      </div>
+    </div>
+
+    <h2 style="margin-top: 3rem;">Tecnologías y habilidades</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Stack Backend</h3>
+        <ul>
+          <li>Java / Spring Boot / Quarkus</li>
+          <li>Node.js / Nest.js</li>
+          <li>SQL y NoSQL (MongoDB, PostgreSQL, etc.)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Complementos & DevOps</h3>
+        <ul>
+          <li>C, C++, Python, React</li>
+          <li>NGINX, Proxy Pass, Firewalls</li>
+          <li>Ciberseguridad y análisis de amenazas</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Inteligencia Artificial</h3>
+        <ul>
+          <li>Clasificación de imágenes con RNA</li>
+          <li>Python + Google Colab</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Negocios y soluciones</h3>
+        <ul>
+          <li>ERP, fintech, sistemas de facturación</li>
+          <li>Integración con plataformas de pago</li>
+          <li>E-commerce (MercadoLibre, Tiendanube)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div id="chat-widget">
+    <button id="open-chat">💬 Preguntame algo</button>
+    <div id="chat-box" class="hidden">
+      <div id="chat-messages"></div>
+      <div style="display: flex; gap: 5px;">
+  <input type="text" id="chat-input" placeholder="Preguntame algo..." />
+  <button id="chat-send">Enviar</button>
+</div>
+    </div>
+  </div>
+  <footer>
+    &copy; 2025 Pablo Matias Pardo. Diseñado con IA.
+  </footer>
+  <script src="script.js"></script>
 </body>
 </html>
