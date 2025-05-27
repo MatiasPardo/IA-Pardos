@@ -1,9 +1,11 @@
 
 const express = require('express');
 const cors = require('cors');
+const fetch = require('node-fetch');
 
 const app = express();
 const port = process.env.PORT || 3000;
+const ollamaUrl = process.env.OLLAMA_URL || 'http://ollama:11434';
 
 // Only allow frontend origin
 const allowedOrigins = ['http://localhost', 'http://127.0.0.1', 'http://<EC2_PUBLIC_IP>', 'https://<your-domain>'];
@@ -22,8 +24,32 @@ app.use(cors({
 
 app.use(express.json());
 
-app.get('/api/hello', (req, res) => {
-    res.json({ message: 'Hello from backend!' });
+app.post('/api/chat', async (req, res) => {
+    const { prompt } = req.body;
+    try {
+        const response = await fetch(ollamaUrl + "/api/generate", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'pardos-assistant:latest',
+                prompt: `Un persona consulta: ${prompt}`,
+                stream: false
+            })
+        });
+
+        const rawText = await response.text();
+
+        try {
+            const data = JSON.parse(rawText);
+            res.json({ reply: data.response || 'Sin respuesta procesable.' });
+        } catch (parseError) {
+            console.error('Error al parsear JSON:', parseError);
+            res.status(500).json({ error: 'Respuesta inválida del modelo', raw: rawText });
+        }
+    } catch (error) {
+        console.error('Error al contactar Ollama:', error);
+        res.status(500).json({ error: 'Error al contactar Ollama' });
+    }
 });
 
 app.listen(port, () => {
