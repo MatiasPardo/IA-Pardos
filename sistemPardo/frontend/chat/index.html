@@ -4,6 +4,73 @@
 <head>
     <meta charset="UTF-8">
     <title>Chat con Matías Pardo</title>
+    <style>body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #1a1a2e;
+  color: #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.container {
+  max-width: 800px;
+  margin: auto;
+  padding: 2rem;
+  flex: 1;
+}
+#chat-area {
+  background: #f0f0f0;
+  color: #1a1a2e;
+  border-radius: 10px;
+  padding: 1rem;
+  height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+#chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+#chat-messages div {
+  margin-bottom: 0.5rem;
+}
+#chat-input-area {
+  display: flex;
+}
+#chat-input {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+#chat-send {
+  padding: 0.5rem 1rem;
+  margin-left: 0.5rem;
+  background: #6c63ff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+#chat-send:hover {
+  background: #584ce2;
+}
+footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+  background: #0f0f1f;
+}</style>
+</head>
+<body>
+    
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat con Matías Pardo</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,5 +86,57 @@
     </div>
     <footer>© 2025 Matías Pardo</footer>
     <script src="script.js"></script>
+</body>
+</html>
+
+    <script>document.addEventListener("DOMContentLoaded", () => {
+  const chatMessages = document.getElementById("chat-messages");
+  const chatInput = document.getElementById("chat-input");
+  const chatSend = document.getElementById("chat-send");
+
+  async function handleUserInput() {
+    const userInput = chatInput.value.trim();
+    if (!userInput) return;
+
+    chatMessages.innerHTML += `<div><strong>Vos:</strong> ${userInput}</div>`;
+    chatMessages.innerHTML += `<div><em>Matías está escribiendo...</em></div>`;
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    chatInput.value = "";
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: userInput })
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al contactar el backend');
+      }
+
+      const data = await response.json();
+      const lastTyping = chatMessages.querySelector('em');
+      if (lastTyping) lastTyping.remove();
+
+      chatMessages.innerHTML += `<div><strong>Matías:</strong> ${data.reply}</div>`;
+    } catch (error) {
+      const lastTyping = chatMessages.querySelector('em');
+      if (lastTyping) lastTyping.remove();
+      chatMessages.innerHTML += `<div><strong>Matías:</strong> Hubo un error al obtener la respuesta.</div>`;
+      console.error(error);
+    }
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  chatInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      handleUserInput();
+    }
+  });
+
+  chatSend.addEventListener("click", handleUserInput);
+});</script>
 </body>
 </html>
