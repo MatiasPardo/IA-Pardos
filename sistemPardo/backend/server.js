@@ -25,10 +25,13 @@ app.use(cors({
 
 app.use(express.json());
 
+console.log("Ollama URL:", ollamaUrl);
+
 app.post('/api/chat', async (req, res) => {
     const { prompt } = req.body;
     console.log('Received prompt:');
     console.log(prompt);
+
     try {
         const response = await fetch(ollamaUrl + "/api/generate", {
             method: 'POST',
@@ -42,20 +45,37 @@ app.post('/api/chat', async (req, res) => {
 
         const rawText = await response.text();
 
+        let data;
         try {
-            const data = JSON.parse(rawText);
-            res.json({ reply: data.response || 'Sin respuesta procesable.' });
-            console.log('Response from Ollama:')
-            console.log(data); 
+            data = JSON.parse(rawText);
         } catch (parseError) {
             console.error('Error al parsear JSON:', parseError);
-            res.status(500).json({ error: 'Respuesta inválida del modelo', raw: rawText });
+            console.error('Texto recibido que falló al parsear:', rawText);
+            return res.status(500).json({ 
+                error: 'Respuesta inválida del modelo (no es JSON)', 
+                raw: rawText 
+            });
         }
+
+        if (!response.ok) {
+            console.error(`Error HTTP de Ollama: ${response.status} ${response.statusText}`);
+            console.error('Detalle del error:', data);
+            return res.status(response.status).json({ 
+                error: 'Error del modelo', 
+                details: data 
+            });
+        }
+
+        res.json({ reply: data.response || 'Sin respuesta procesable.' });
+        console.log('Response from Ollama:');
+        console.log(data);
+
     } catch (error) {
         console.error('Error al contactar Ollama:', error);
         res.status(500).json({ error: 'Error al contactar Ollama' });
     }
 });
+
 
 app.listen(port, () => {
     console.log(`Backend running on port ${port}`);
