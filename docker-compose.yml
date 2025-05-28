@@ -1,6 +1,4 @@
 
-version: '3.8'
-
 services:
   ollama:
     build:
@@ -29,7 +27,6 @@ services:
     volumes:
     - ./sistemPardo/frontend:/usr/share/nginx/html:ro
     - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    - ./ssl:/etc/nginx/ssl:ro
     ports:
       - "80:80"
       - "443:443"  
