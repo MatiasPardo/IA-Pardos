@@ -7,12 +7,17 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Chat con Matías Pardo</h1>
-    <div id="chat-box">
-        <input type="text" id="user-input" placeholder="Escribe tu pregunta...">
-        <button id="send-btn">Enviar</button>
-        <div id="response"></div>
+    <div class="container">
+        <h1 style="font-weight: bold;">Chat en vivo con Matías Pardo</h1>
+        <div id="chat-area">
+            <div id="chat-messages"></div>
+            <div id="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Escribe tu mensaje..." />
+                <button id="chat-send">Enviar</button>
+            </div>
+        </div>
     </div>
+    <footer>© 2025 Matías Pardo</footer>
     <script src="script.js"></script>
 </body>
 </html>
