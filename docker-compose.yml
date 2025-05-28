@@ -1,14 +1,5 @@
 
 services:
-  ollama:
-    build:
-      context: ./assistant
-    container_name: ollama
-    expose:
-      - "11434"
-    networks:
-      - pardos-network
-
   pardos-backend:
     build:
       context: ./sistemPardo/backend
@@ -17,7 +8,7 @@ services:
       - "3000"
     environment:
       - NODE_ENV=production
-      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_URL=${OLLAMA_URL}
     networks:
       - pardos-network
 
