@@ -128,4 +128,7 @@ docker-compose up -d --force-recreate
 
 ---
 
-⚠ **NOTA:** Ollama no queda expuesto al exterior. Solo el backend puede comunicarse con él.
+⚠ **NOTAS IMPORTANTES:**
+- Ollama no queda expuesto al exterior. Solo el backend puede comunicarse con él.
+- El sistema ahora funciona completamente sin SSL (solo HTTP).
+- Todos los servicios están integrados en un solo docker-compose.yml.

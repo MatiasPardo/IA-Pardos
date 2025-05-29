@@ -1,10 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat con Matías Pardo</title>
-    <style>body {
+    <style>
+body {
   margin: 0;
   font-family: Arial, sans-serif;
   background: #1a1a2e;
@@ -62,16 +63,8 @@ footer {
   padding: 1rem;
   font-size: 0.9rem;
   background: #0f0f1f;
-}</style>
-</head>
-<body>
-    
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Chat con Matías Pardo</title>
-    <link rel="stylesheet" href="styles.css">
+}
+    </style>
 </head>
 <body>
     <div class="container">
@@ -85,11 +78,9 @@ footer {
         </div>
     </div>
     <footer>© 2025 Matías Pardo</footer>
-    <script src="script.js"></script>
-</body>
-</html>
-
-    <script>document.addEventListener("DOMContentLoaded", () => {
+    
+    <script>
+document.addEventListener("DOMContentLoaded", () => {
   const chatMessages = document.getElementById("chat-messages");
   const chatInput = document.getElementById("chat-input");
   const chatSend = document.getElementById("chat-send");
@@ -137,6 +128,7 @@ footer {
   });
 
   chatSend.addEventListener("click", handleUserInput);
-});</script>
+});
+    </script>
 </body>
 </html>

@@ -8,17 +8,10 @@ const port = process.env.PORT || 3000;
 const ollamaUrl = process.env.OLLAMA_URL || 'http://ollama:11434';
 
 // Only allow frontend origin
-const allowedOrigins = ['http://localhost', 'http://127.0.0.1', 'http://ec2-3-145-41-15.us-east-2.compute.amazonaws.com', 'https://pardos.com.ar', 'https://www.pardos.com.ar', 'http://3.145.41.15'];
+const allowedOrigins = ['http://localhost', 'http://127.0.0.1'];
 
 app.use(cors({
-    origin: function (origin, callback) {
-        if (allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            console.log('Blocked CORS origin:', origin);
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
