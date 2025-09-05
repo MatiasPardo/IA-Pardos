@@ -10,6 +10,7 @@ const ollamaUrl = process.env.OLLAMA_URL || 'http://ollama:11434';
 // Only allow frontend origin
 const allowedOrigins = ['http://localhost', 'http://127.0.0.1'];
 
+
 app.use(cors({
     origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
