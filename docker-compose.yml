@@ -2,14 +2,20 @@ version: '3.8'
 
 services:
   ollama:
-    build:
-      context: ./assistant
+    image: ollama/ollama:latest
     container_name: pardos-ollama
     expose:
       - "11434"
     volumes:
       - ollama_data:/root/.ollama
+      - ./assistant/diag:/app/diag
     restart: unless-stopped
+    command: >
+      sh -c "ollama serve &
+             sleep 10 &&
+             ollama pull llama3:8b &&
+             ollama create pardos-assistant -f /app/diag &&
+             wait"
     networks:
       - pardos-network
 
@@ -31,7 +37,7 @@ services:
     image: nginx:alpine
     container_name: pardos-frontend
     volumes:
-      - ./sistemPardo/frontend:/usr/share/nginx/html:ro
+      - ./sistemPardo/frontend:/usr/share/nginx/html
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "80:80"
