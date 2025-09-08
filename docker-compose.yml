@@ -2,7 +2,8 @@ version: '3.8'
 
 services:
   ollama:
-    image: ollama/ollama:latest
+    build:
+      context: ./assistant
     container_name: pardos-ollama
     expose:
       - "11434"
@@ -18,7 +19,6 @@ services:
              wait"
     networks:
       - pardos-network
-
   pardos-backend:
     build:
       context: ./sistemPardo/backend
