@@ -2,10 +2,56 @@
 # IA Pardo Final Setup 🚀
 
 Este proyecto contiene:
-✅ Backend (Node.js) → comunica con Ollama
-✅ Ollama assistant (Python)
-✅ Frontend (HTML estático) servido por NGINX
-✅ Configuración completa en `docker-compose.yml`
+✅ **Backend** (Node.js) → API que comunica con Ollama
+✅ **Ollama** (IA) → 3 modelos de lenguaje disponibles
+✅ **Frontend** (HTML estático) → Servido por NGINX
+✅ **Portainer** → Administración web de Docker
+✅ **Configuración completa** en un solo `docker-compose.yml`
+
+---
+
+## 🏢 **Arquitectura del Sistema**
+
+```
+🌐 Internet
+    │
+    ↓ Puerto 80
+📦 NGINX (Frontend)
+    │
+    ├── Sirve: index.html, chat/index.html
+    └── Proxy: /api/ → Backend
+    │
+    ↓ Red interna: pardos-network
+📦 Backend (Node.js) - Puerto 3000
+    │
+    └── Conecta: http://ollama:11434
+    │
+    ↓ Red interna: pardos-network
+🤖 Ollama (IA)
+    │
+    ├── llama3:8b (modelo base)
+    ├── pardos-assistant:latest (personalizado)
+    └── llama3-base (base optimizado)
+
+📊 Portainer (Puerto 9000)
+    └── Administra todos los contenedores
+```
+
+### 📋 **Componentes:**
+
+| Servicio | Contenedor | Puerto | Función |
+|----------|------------|--------|----------|
+| **Frontend** | `pardos-frontend` | 80 | Interfaz web + Proxy NGINX |
+| **Backend** | `pardos-backend` | 3000 | API REST para chat |
+| **Ollama** | `pardos-ollama` | 11434 (interno) | Modelos de IA |
+| **Portainer** | `pardos-portainer` | 9000 | Administración Docker |
+
+### 🌐 **Red y Volúmenes:**
+
+- **Red:** `pardos-network` (bridge) - Comunicación interna entre servicios
+- **Volúmenes:**
+  - `ollama_data` - Modelos y configuración de Ollama
+  - `portainer_data` - Configuración de Portainer
 
 ---
 
@@ -93,17 +139,127 @@ docker stats
 
 ---
 
-### 🌐 Accesos finales
+### 🌐 **Accesos finales**
 
-- Frontend presentación:
+- **Frontend presentación:**
   ```
   http://<EC2_PUBLIC_IP>
   ```
 
-- Chat con Matías Pardo:
+- **Chat con Matías Pardo:**
   ```
   http://<EC2_PUBLIC_IP>/chat/index.html
   ```
+
+- **Portainer (Administración Docker):**
+  ```
+  http://<EC2_PUBLIC_IP>:9000
+  ```
+
+### 🔌 **API Endpoints del Backend**
+
+| Endpoint | Método | Descripción | Puerto |
+|----------|--------|-------------|--------|
+| `/api/chat` | POST | Chat con modelos de IA | 3000 |
+| `/api/models` | GET | Listar modelos disponibles | 3000 |
+
+#### **1. Chat con IA - `/api/chat`**
+**Descripción:** Envía mensajes a los modelos de IA y recibe respuestas.
+
+**Body (JSON):**
+```json
+{
+  "prompt": "Tu mensaje aquí",
+  "model": "nombre-del-modelo" // Opcional, default: pardos-assistant:latest
+}
+```
+
+**Ejemplos:**
+```bash
+# Modelo personalizado (default)
+curl -X POST http://<EC2_PUBLIC_IP>:3000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Hola Matías, contame sobre tu experiencia"}'
+
+# Modelo base específico
+curl -X POST http://<EC2_PUBLIC_IP>:3000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Hello, how are you?", "model": "llama3:8b"}'
+
+# Modelo base optimizado
+curl -X POST http://<EC2_PUBLIC_IP>:3000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Explain AI", "model": "llama3-base"}'
+```
+
+**Respuesta:**
+```json
+{
+  "reply": "Respuesta del modelo de IA..."
+}
+```
+
+#### **2. Listar Modelos - `/api/models`**
+**Descripción:** Obtiene todos los modelos instalados en Ollama.
+
+**Ejemplo:**
+```bash
+curl http://<EC2_PUBLIC_IP>:3000/api/models
+```
+
+**Respuesta:**
+```json
+{
+  "models": [
+    {
+      "name": "pardos-assistant:latest",
+      "size": 4661224676,
+      "digest": "sha256:..."
+    },
+    {
+      "name": "llama3:8b",
+      "size": 4661224676,
+      "digest": "sha256:..."
+    },
+    {
+      "name": "llama3-base",
+      "size": 4661224676,
+      "digest": "sha256:..."
+    }
+  ]
+}
+```
+
+### 🧪 **Testing con Postman**
+
+**URL Base:** `http://<EC2_PUBLIC_IP>:3000`
+
+**Headers necesarios:**
+- `Content-Type: application/json`
+
+**Timeout configurado:** 10 minutos (para respuestas largas de IA)
+
+### 🤖 **Modelos de IA disponibles**
+
+El sistema incluye **3 modelos de Ollama:**
+
+1. **`llama3:8b`** - Modelo base de Meta
+2. **`pardos-assistant:latest`** - Modelo personalizado con datos de Matías Pardo
+   - Entrenado con información personal y profesional
+   - Responde como Matías en primera persona
+   - Incluye experiencia laboral, proyectos y estudios
+3. **`llama3-base`** - Modelo base optimizado
+   - Configuración mejorada para respuestas generales
+   - Asistente de IA genérico y amigable
+
+**Ver modelos instalados:**
+```bash
+# Desde línea de comandos
+docker exec -it pardos-ollama ollama list
+
+# Desde API del backend
+curl http://<EC2_PUBLIC_IP>:3000/api/models
+```
 
 ---
 
@@ -129,6 +285,9 @@ docker-compose up -d --force-recreate
 ---
 
 ⚠ **NOTAS IMPORTANTES:**
-- Ollama no queda expuesto al exterior. Solo el backend puede comunicarse con él.
-- El sistema ahora funciona completamente sin SSL (solo HTTP).
-- Todos los servicios están integrados en un solo docker-compose.yml.
+- **Backend expuesto en puerto 3000** para acceso directo con Postman/curl
+- **Ollama interno** - Solo el backend puede comunicarse con él
+- **Sistema sin SSL** - Funciona completamente con HTTP
+- **Timeout de 10 minutos** - Configurado en backend y frontend
+- **3 modelos disponibles** - Personalizado, base y optimizado
+- **Portainer integrado** - Administración web en puerto 9000
