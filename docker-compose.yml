@@ -9,7 +9,14 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+      - ./assistant/diag:/app/diag
     restart: unless-stopped
+    command: >
+      sh -c "ollama serve &
+             sleep 10 &&
+             ollama pull llama3:8b &&
+             ollama create pardos-assistant -f /app/diag &&
+             wait"
     networks:
       - pardos-network
 
