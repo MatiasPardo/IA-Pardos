@@ -1,39 +1,18 @@
-# Use Ubuntu as the base image
-FROM ubuntu:20.04
+# Usa Ollama oficial como base (ya trae el binario)
+FROM ollama/ollama:0.3.13
 
-# Set working directory
 WORKDIR /app
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    lshw \
-    build-essential \
-    pciutils \
-    sed \
-    && rm -rf /var/lib/apt/lists/*
+# Copiamos tu script de arranque (todos los comandos viven acá)
+COPY install.sh /app/install.sh
+RUN sed -i 's/\r$//' /app/install.sh && chmod +x /app/install.sh
 
-# Ensure Ollama binary path is included
-ENV OLLAMA_HOST=0.0.0.0
-ENV PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+# Copiamos el Modelfile (en tu repo 'assistant/diag' es un archivo)
+COPY diag /app/diag
 
-COPY install.sh ./install.sh
-COPY run-ollama.sh ./run-ollama.sh
-COPY diag ./diag
-
-# Install Ollama
-RUN sed -i 's/\r$//' install.sh \
-    && chmod +x install.sh \
-    && ./install.sh \
-    && ln -sf /usr/local/bin/ollama /bin/ollama
-
-# Prepare the run script
-RUN sed -i 's/\r$//' run-ollama.sh \
-    && chmod +x run-ollama.sh
-
-# Expose Ollama API port
+# Expone el API de Ollama y preserva modelos
 EXPOSE 11434
+VOLUME ["/root/.ollama"]
 
-# Run Ollama and preload models when the container starts
-CMD ["bash", "-c", "./run-ollama.sh && tail -f /dev/null"]
+# Arranque: ejecutar tu script
+CMD ["/bin/sh","-lc","/app/install.sh"]
