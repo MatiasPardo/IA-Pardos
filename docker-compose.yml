@@ -4,7 +4,6 @@ services:
   ollama:
     build:
       context: ./assistant
-      dockerfile: Dockerfile
     container_name: pardos-ollama
     expose:
       - "11434"
@@ -12,19 +11,23 @@ services:
       - ollama_data:/root/.ollama
       - ./assistant/diag:/app/diag:ro
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags >/dev/null"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-      start_period: 5s
-    networks: [pardos-network]
-
+    command: >
+      sh -c "ollama serve &
+             sleep 10 &&
+             ollama pull llama3:8b &&
+             ollama create pardos-assistant -f /app/diag &&
+             wait"
+    networks:
+      - pardos-network
   pardos-backend:
     build:
       context: ./sistemPardo/backend
       dockerfile: Dockerfile
     container_name: pardos-backend
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000

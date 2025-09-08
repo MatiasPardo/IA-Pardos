@@ -96,11 +96,17 @@ document.addEventListener("DOMContentLoaded", () => {
     chatInput.value = "";
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutos
+      
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userInput })
+        body: JSON.stringify({ prompt: userInput }),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error('Error al contactar el backend');
