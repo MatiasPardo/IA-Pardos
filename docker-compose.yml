@@ -5,9 +5,6 @@ services:
     build:
       context: ./assistant
       dockerfile: Dockerfile
-      args:
-        # Opcional: fijar versión de Ollama; si no, instala 'latest'
-        # OLLAMA_VERSION: "0.3.13"
     container_name: pardos-ollama
     expose:
       - "11434"
@@ -32,11 +29,18 @@ services:
       - PORT=3000
       - OLLAMA_URL=http://ollama:11434
     depends_on:
-      ollama:
-        condition: service_healthy
+      - ollama
     ports:
       - "3000:3000"
+    command: >
+      sh -lc "
+        (apt-get update && apt-get install -y curl >/dev/null 2>&1 || true);
+        until getent hosts ollama >/dev/null; do sleep 1; done;
+        until curl -sf http://ollama:11434/api/tags >/dev/null; do sleep 1; done;
+        npm start
+      "
     networks: [pardos-network]
+
 
   pardos-frontend:
     image: nginx:1.27-alpine
