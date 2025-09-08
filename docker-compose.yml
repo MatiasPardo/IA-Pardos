@@ -2,39 +2,25 @@ version: '3.8'
 
 services:
   ollama:
-    image: ollama/ollama:0.3.13
+    build:
+      context: ./assistant
+      dockerfile: Dockerfile
+      args:
+        # Opcional: fijar versión de Ollama; si no, instala 'latest'
+        # OLLAMA_VERSION: "0.3.13"
     container_name: pardos-ollama
     expose:
       - "11434"
     volumes:
       - ollama_data:/root/.ollama
-      - ./assistant/diag:/app/diag:ro
     restart: unless-stopped
-    entrypoint: ["/bin/sh","-lc"]
-    command: |
-      set -e
-      ollama serve &
-      # Esperar a que Ollama quede listo
-      for i in $(seq 1 60); do
-        sleep 1
-        curl -sf http://localhost:11434/api/tags >/dev/null && break || true
-      done
-      # Pull del modelo base sólo si no existe
-      if ! ollama list | grep -q '^llama3:8b'; then
-        ollama pull llama3:8b
-      fi
-      # Crear el modelo custom sólo si no existe
-      if ! ollama list | grep -q '^pardos-assistant'; then
-        ollama create pardos-assistant -f /app/diag
-      fi
-      wait
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags >/dev/null"]
       interval: 5s
       timeout: 3s
       retries: 30
       start_period: 5s
-    networks: [appnet]
+    networks: [pardos-network]
 
   pardos-backend:
     build:
@@ -50,7 +36,7 @@ services:
         condition: service_healthy
     ports:
       - "3000:3000"
-    networks: [appnet]
+    networks: [pardos-network]
 
   pardos-frontend:
     image: nginx:1.27-alpine
@@ -62,7 +48,7 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "8080:80"
-    networks: [appnet]
+    networks: [pardos-network]
 
   portainer:
     image: portainer/portainer-ce:2.20.3
@@ -72,12 +58,12 @@ services:
       - portainer_data:/data
     ports:
       - "9000:9000"
-    networks: [appnet]
+    networks: [pardos-network]
 
 volumes:
   ollama_data:
   portainer_data:
 
 networks:
-  appnet:
+  pardos-network:
     driver: bridge

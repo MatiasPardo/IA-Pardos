@@ -1,39 +1,26 @@
-# Use Ubuntu as the base image
-FROM ubuntu:20.04
+# Imagen base
+FROM ubuntu:22.04
 
-# Set working directory
+# Evitar prompts interactivos
+ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    lshw \
-    build-essential \
-    pciutils \
-    sed \
-    && rm -rf /var/lib/apt/lists/*
+# Instalar Ollama con script oficial (y deps básicas)
+COPY install.sh /app/install.sh
+RUN sed -i 's/\r$//' /app/install.sh && chmod +x /app/install.sh && /app/install.sh
 
-# Ensure Ollama binary path is included
-ENV OLLAMA_HOST=0.0.0.0
-ENV PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+# Copiar scripts y Modelfile (en tu repo, 'diag' es un archivo Modelfile)
+COPY run-ollama.sh /app/run-ollama.sh
+RUN sed -i 's/\r$//' /app/run-ollama.sh && chmod +x /app/run-ollama.sh
 
-COPY install.sh ./install.sh
-COPY run-ollama.sh ./run-ollama.sh
-COPY diag ./diag
+# Copiamos el Modelfile (archivo) tal como está en el repo
+COPY diag /app/diag
 
-# Install Ollama
-RUN sed -i 's/\r$//' install.sh \
-    && chmod +x install.sh \
-    && ./install.sh \
-    && ln -sf /usr/local/bin/ollama /bin/ollama
-
-# Prepare the run script
-RUN sed -i 's/\r$//' run-ollama.sh \
-    && chmod +x run-ollama.sh
-
-# Expose Ollama API port
+# Exponer puerto de la API de Ollama
 EXPOSE 11434
 
-# Run Ollama and preload models when the container starts
-CMD ["bash", "-c", "./run-ollama.sh && tail -f /dev/null"]
+# Directorio donde Ollama guarda modelos (volumen en compose)
+VOLUME ["/root/.ollama"]
+
+# Comando por defecto: levantar Ollama y preparar modelos
+CMD ["/bin/bash","-lc","/app/run-ollama.sh"]
