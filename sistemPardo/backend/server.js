@@ -45,16 +45,18 @@ app.get('/api/models', async (req, res) => {
 });
 
 app.post('/api/chat', async (req, res) => {
-    const { prompt } = req.body;
-    console.log('Received prompt:');
-    console.log(prompt);
+    const { prompt, model } = req.body;
+    const selectedModel = model || 'pardos-assistant:latest'; // Default al modelo personalizado
+    
+    console.log('Received prompt:', prompt);
+    console.log('Using model:', selectedModel);
 
     try {
         const response = await fetch(ollamaUrl + "/api/generate", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: 'pardos-assistant:latest',
+                model: selectedModel,
                 prompt: `Un persona consulta: ${prompt}`,
                 stream: false
             })
@@ -94,6 +96,11 @@ app.post('/api/chat', async (req, res) => {
 });
 
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`Backend running on port ${port}`);
 });
+
+// Aumentar timeout del servidor a 10 minutos
+server.timeout = 600000; // 10 minutos en milisegundos
+server.keepAliveTimeout = 600000;
+server.headersTimeout = 610000;
