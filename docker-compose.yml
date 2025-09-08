@@ -2,9 +2,10 @@ version: '3.8'
 
 services:
   ollama:
-    image: ollama/ollama:latest
+    build:
+      context: ./assistant
     container_name: pardos-ollama
-    ports:
+    expose:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
