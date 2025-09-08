@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# Todos los comandos viven acá para no usar 'command:' en docker-compose
 set -euo pipefail
-
 export OLLAMA_HOST=0.0.0.0
 
 echo ">>> Iniciando Ollama (ollama serve)"
