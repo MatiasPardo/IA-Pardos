@@ -1,30 +1,18 @@
-# Imagen base
 FROM ubuntu:24.04
-
-RUN apt-get update || true && \
-    apt-get install -y --no-install-recommends ca-certificates gnupg && \
-    rm -rf /var/lib/apt/lists/*
-    
-# Evitar prompts interactivos
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
 
-# Instalar Ollama con script oficial (y deps básicas)
+# Insecure APT setup (trusted repos, http mirrors) - for closed environments only
+RUN set -eux;     sed -i       -e 's|http://archive.ubuntu.com|http://mirrors.edge.kernel.org|g'       -e 's|http://security.ubuntu.com|http://mirrors.edge.kernel.org|g'       /etc/apt/sources.list;     sed -i 's|^deb |deb [trusted=yes] |g' /etc/apt/sources.list;     printf 'APT::Get::AllowUnauthenticated "true";\nAcquire::AllowInsecureRepositories "true";\nAcquire::AllowDowngradeToInsecureRepositories "true";\n' > /etc/apt/apt.conf.d/99insecure;     apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && rm -rf /var/lib/apt/lists/*
+
+# Copy startup script and Modelfile (in this repo, assistant/diag is a single Modelfile file)
 COPY install.sh /app/install.sh
-RUN sed -i 's/\r$//' /app/install.sh && chmod +x /app/install.sh && /app/install.sh
+RUN sed -i 's/\r$//' /app/install.sh && chmod +x /app/install.sh
 
-# Copiar scripts y Modelfile (en tu repo, 'diag' es un archivo Modelfile)
-COPY run-ollama.sh /app/run-ollama.sh
-RUN sed -i 's/\r$//' /app/run-ollama.sh && chmod +x /app/run-ollama.sh
-
-# Copiamos el Modelfile (archivo) tal como está en el repo
 COPY diag /app/diag
 
-# Exponer puerto de la API de Ollama
 EXPOSE 11434
-
-# Directorio donde Ollama guarda modelos (volumen en compose)
 VOLUME ["/root/.ollama"]
 
-# Comando por defecto: levantar Ollama y preparar modelos
-CMD ["/bin/bash","-lc","/app/run-ollama.sh"]
+# All runtime commands live in install.sh
+CMD ["/bin/bash","-lc","/app/install.sh"]

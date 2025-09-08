@@ -10,6 +10,7 @@ services:
       - "11434"
     volumes:
       - ollama_data:/root/.ollama
+      - ./assistant/diag:/app/diag:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags >/dev/null"]
@@ -32,15 +33,7 @@ services:
       - ollama
     ports:
       - "3000:3000"
-    command: >
-      sh -lc "
-        (apt-get update && apt-get install -y curl >/dev/null 2>&1 || true);
-        until getent hosts ollama >/dev/null; do sleep 1; done;
-        until curl -sf http://ollama:11434/api/tags >/dev/null; do sleep 1; done;
-        npm start
-      "
     networks: [pardos-network]
-
 
   pardos-frontend:
     image: nginx:1.27-alpine
