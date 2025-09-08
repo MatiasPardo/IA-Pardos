@@ -2,8 +2,7 @@ version: '3.8'
 
 services:
   ollama:
-    build:
-      context: ./assistant
+    image: ollama/ollama:latest
     container_name: pardos-ollama
     ports:
       - "11434:11434"
@@ -13,7 +12,7 @@ services:
     restart: unless-stopped
     command: >
       sh -c "ollama serve &
-             sleep 10 &&
+             sleep 8 &&
              ollama pull llama3:8b &&
              ollama create pardos-assistant -f /app/diag &&
              wait"
