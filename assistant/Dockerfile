@@ -1,6 +1,10 @@
 # Imagen base
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
+RUN apt-get update || true && \
+    apt-get install -y --no-install-recommends ca-certificates gnupg && \
+    rm -rf /var/lib/apt/lists/*
+    
 # Evitar prompts interactivos
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
