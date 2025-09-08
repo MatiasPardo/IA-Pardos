@@ -21,6 +21,29 @@ app.use(express.json());
 
 console.log("Ollama URL:", ollamaUrl);
 
+app.get('/api/models', async (req, res) => {
+    console.log('Consultando modelos de Ollama...');
+    
+    try {
+        const response = await fetch(ollamaUrl + "/api/tags");
+        
+        if (!response.ok) {
+            console.error(`Error HTTP de Ollama: ${response.status} ${response.statusText}`);
+            return res.status(response.status).json({ 
+                error: 'Error al consultar modelos' 
+            });
+        }
+        
+        const data = await response.json();
+        res.json(data);
+        console.log('Modelos obtenidos:', data);
+        
+    } catch (error) {
+        console.error('Error al contactar Ollama para modelos:', error);
+        res.status(500).json({ error: 'Error al contactar Ollama' });
+    }
+});
+
 app.post('/api/chat', async (req, res) => {
     const { prompt } = req.body;
     console.log('Received prompt:');

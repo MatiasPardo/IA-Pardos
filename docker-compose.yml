@@ -25,6 +25,8 @@ services:
     container_name: pardos-backend
     expose:
       - "3000"
+    ports:
+      - "3000:3000"
     environment:
       - NODE_ENV=production
       - OLLAMA_URL=http://ollama:11434
