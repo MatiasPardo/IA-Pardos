@@ -6,7 +6,7 @@ services:
       context: ./assistant
     container_name: pardos-ollama
     expose:
-      - "11434:11434"
+      - "11434"
     volumes:
       - ollama_data:/root/.ollama
       - ./assistant/diag:/app/diag
