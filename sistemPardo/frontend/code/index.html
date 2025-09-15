@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InterCode - Generador de Código</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-dark.min.css">
+    <style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+  color: #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 2rem;
+  flex: 1;
+}
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.header h1 {
+  color: #6c63ff;
+  font-size: 2.5rem;
+  margin: 0;
+  text-shadow: 0 0 20px rgba(108, 99, 255, 0.3);
+}
+.header p {
+  color: #a0a0a0;
+  font-size: 1.1rem;
+  margin: 0.5rem 0;
+}
+#chat-area {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 1.5rem;
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(108, 99, 255, 0.2);
+}
+#chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  padding-right: 10px;
+}
+.message {
+  margin-bottom: 1.5rem;
+  animation: fadeIn 0.3s ease-in;
+}
+.user-message {
+  background: rgba(108, 99, 255, 0.1);
+  border-left: 4px solid #6c63ff;
+  padding: 1rem;
+  border-radius: 0 10px 10px 0;
+}
+.bot-message {
+  background: rgba(0, 255, 136, 0.05);
+  border-left: 4px solid #00ff88;
+  padding: 1rem;
+  border-radius: 0 10px 10px 0;
+}
+.message-header {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.user-icon::before { content: "👤"; }
+.bot-icon::before { content: "🤖"; }
+.code-block {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+.code-header {
+  background: #2d2d2d;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: #a0a0a0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.copy-btn {
+  background: #6c63ff;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.copy-btn:hover {
+  background: #584ce2;
+}
+.code-content {
+  padding: 1rem;
+  overflow-x: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+#chat-input-area {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+}
+#chat-input {
+  flex: 1;
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(108, 99, 255, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f0f0f0;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 50px;
+  max-height: 150px;
+}
+#chat-input:focus {
+  outline: none;
+  border-color: #6c63ff;
+  box-shadow: 0 0 10px rgba(108, 99, 255, 0.3);
+}
+#chat-send {
+  padding: 1rem 2rem;
+  background: linear-gradient(45deg, #6c63ff, #584ce2);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+#chat-send:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(108, 99, 255, 0.4);
+}
+#chat-send:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #a0a0a0;
+  font-style: italic;
+}
+.typing-dots {
+  display: flex;
+  gap: 0.2rem;
+}
+.typing-dots span {
+  width: 6px;
+  height: 6px;
+  background: #6c63ff;
+  border-radius: 50%;
+  animation: typing 1.4s infinite ease-in-out;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing {
+  0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+  background: rgba(0, 0, 0, 0.3);
+  color: #a0a0a0;
+}
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(108, 99, 255, 0.5);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(108, 99, 255, 0.7);
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>InterCode</h1>
+            <p>Generador de Código Inteligente para Interbanking</p>
+        </div>
+        <div id="chat-area">
+            <div id="chat-messages"></div>
+            <div id="chat-input-area">
+                <textarea id="chat-input" placeholder="Describe el código que necesitas generar..."></textarea>
+                <button id="chat-send">Generar</button>
+            </div>
+        </div>
+    </div>
+    <footer>© 2025 InterCode - Powered by AI</footer>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const chatMessages = document.getElementById("chat-messages");
+  const chatInput = document.getElementById("chat-input");
+  const chatSend = document.getElementById("chat-send");
+
+  function formatCodeResponse(text) {
+    text = text.replace(/&quot;/g, '"')
+               .replace(/&amp;/g, '&')
+               .replace(/&lt;/g, '<')
+               .replace(/&gt;/g, '>')
+               .replace(/&#x27;/g, "'");
+    
+    const codeBlockRegex = /```(\w+)?\n?([\s\S]*?)```/g;
+    let hasCodeBlocks = false;
+    
+    text = text.replace(codeBlockRegex, (match, language, code) => {
+      hasCodeBlocks = true;
+      const lang = language || 'java';
+      const cleanCode = code.trim();
+      return `<div class="code-block">
+        <div class="code-header">
+          <span>${lang.toUpperCase()}</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+        </div>
+        <div class="code-content"><pre><code class="language-${lang}">${cleanCode}</code></pre></div>
+      </div>`;
+    });
+
+    if (!hasCodeBlocks && (text.includes('class ') || text.includes('public ') || text.includes('private ') || text.includes('import '))) {
+      const cleanCode = text.trim();
+      text = `<div class="code-block">
+        <div class="code-header">
+          <span>JAVA</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+        </div>
+        <div class="code-content"><pre><code class="language-java">${cleanCode}</code></pre></div>
+      </div>`;
+    }
+
+    if (!text.includes('<div class="code-block">')) {
+      text = text.replace(/\n/g, '<br>');
+    }
+
+    return text;
+  }
+
+  function addMessage(content, isUser = false) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+    
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'message-header';
+    headerDiv.innerHTML = `<span class="${isUser ? 'user-icon' : 'bot-icon'}"></span>${isUser ? 'Tú' : 'InterCode'}`;
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.innerHTML = isUser ? content : formatCodeResponse(content);
+    
+    messageDiv.appendChild(headerDiv);
+    messageDiv.appendChild(contentDiv);
+    chatMessages.appendChild(messageDiv);
+    
+    if (!isUser) {
+      Prism.highlightAllUnder(messageDiv);
+    }
+    
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function showTypingIndicator() {
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'message bot-message typing-indicator';
+    typingDiv.id = 'typing-indicator';
+    typingDiv.innerHTML = `
+      <div class="message-header">
+        <span class="bot-icon"></span>InterCode
+      </div>
+      <div>
+        Generando código
+        <div class="typing-dots">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    `;
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function removeTypingIndicator() {
+    const typing = document.getElementById('typing-indicator');
+    if (typing) typing.remove();
+  }
+
+  async function handleUserInput() {
+    const userInput = chatInput.value.trim();
+    if (!userInput) return;
+
+    addMessage(userInput, true);
+    showTypingIndicator();
+    
+    chatInput.value = "";
+    chatSend.disabled = true;
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 600000);
+      
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          prompt: userInput,
+          model: 'pardos-code:latest'
+        }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error('Error al contactar el backend');
+      }
+
+      const data = await response.json();
+      removeTypingIndicator();
+      addMessage(data.reply);
+      
+    } catch (error) {
+      removeTypingIndicator();
+      addMessage('❌ Error al generar el código. Por favor, intenta nuevamente.');
+      console.error(error);
+    }
+
+    chatSend.disabled = false;
+  }
+
+  window.copyCode = function(button) {
+    const codeBlock = button.closest('.code-block');
+    const code = codeBlock.querySelector('code').textContent;
+    
+    navigator.clipboard.writeText(code).then(() => {
+      const originalText = button.textContent;
+      button.textContent = '✓ Copiado';
+      button.style.background = '#00ff88';
+      
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.style.background = '#6c63ff';
+      }, 2000);
+    });
+  };
+
+  chatInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleUserInput();
+    }
+  });
+
+  chatSend.addEventListener("click", handleUserInput);
+  
+  setTimeout(() => {
+    addMessage("¡Hola! Soy InterCode, tu asistente para generar código Java. Describe qué necesitas y te ayudo a crearlo siguiendo las mejores prácticas y principios SOLID.");
+  }, 500);
+});
+    </script>
+</body>
+</html>
