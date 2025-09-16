@@ -151,6 +151,11 @@ docker stats
   http://<EC2_PUBLIC_IP>/chat/index.html
   ```
 
+- **InterCode (Generador de Código Java):**
+  ```
+  http://<EC2_PUBLIC_IP>/code/index.html
+  ```
+
 - **Portainer (Administración Docker):**
   ```
   http://<EC2_PUBLIC_IP>:9000
@@ -181,15 +186,15 @@ curl -X POST http://<EC2_PUBLIC_IP>:3000/api/chat \
   -H "Content-Type: application/json" \
   -d '{"prompt": "Hola Matías, contame sobre tu experiencia"}'
 
+# Modelo de código Java
+curl -X POST http://<EC2_PUBLIC_IP>:3000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Crea una clase Usuario con patrón Builder", "model": "pardos-code:latest"}'
+
 # Modelo base específico
 curl -X POST http://<EC2_PUBLIC_IP>:3000/api/chat \
   -H "Content-Type: application/json" \
   -d '{"prompt": "Hello, how are you?", "model": "llama3:8b"}'
-
-# Modelo base optimizado
-curl -X POST http://<EC2_PUBLIC_IP>:3000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "Explain AI", "model": "llama3-base"}'
 ```
 
 **Respuesta:**
@@ -248,9 +253,40 @@ El sistema incluye **3 modelos de Ollama:**
    - Entrenado con información personal y profesional
    - Responde como Matías en primera persona
    - Incluye experiencia laboral, proyectos y estudios
-3. **`llama3-base`** - Modelo base optimizado
-   - Configuración mejorada para respuestas generales
-   - Asistente de IA genérico y amigable
+3. **`pardos-code:latest`** - Modelo especializado en código Java
+   - Optimizado para generar código con buenas prácticas
+   - Sigue principios SOLID y patrones de diseño
+   - Respuestas directas sin explicaciones adicionales
+
+### ⚙️ **Parámetros de configuración de modelos**
+
+Cada modelo usa parámetros específicos en sus archivos `diag` para optimizar su comportamiento:
+
+#### **PARAMETER temperature**
+- **Rango:** 0.0 - 2.0
+- **Función:** Controla la creatividad/aleatoriedad de las respuestas
+- **Valores:**
+  - `0.1` (pardos-code) - Respuestas muy precisas y determinísticas
+  - `0.7` (llama3-base) - Balance entre creatividad y precisión
+  - `1.0` (pardos-assistant) - Respuestas más creativas y naturales
+
+#### **PARAMETER top_p**
+- **Rango:** 0.0 - 1.0
+- **Función:** Controla la diversidad de palabras consideradas
+- **Valor:** `0.9` - Considera el 90% de las opciones más probables
+
+#### **PARAMETER num_ctx**
+- **Función:** Define el tamaño del contexto (memoria)
+- **Valor:** `4096` tokens - Permite conversaciones largas
+
+#### **PARAMETER stop**
+- **Función:** Tokens que indican fin de respuesta
+- **Valores:** `<|start_header_id|>`, `<|end_header_id|>`, `<|eot_id|>`
+
+#### **TEMPLATE**
+- **Función:** Define el formato de conversación
+- **Estructura:** Sistema → Usuario → Asistente
+- **Tokens especiales:** Marcan inicio/fin de cada rol
 
 **Ver modelos instalados:**
 ```bash
