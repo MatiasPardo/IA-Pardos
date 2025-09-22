@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ollamaService = require('../services/ollamaService');
 const sessionService = require('../services/sessionService');
+const chatService = require('../services/chatService');
 const { authenticate } = require('../middleware/auth');
 
 // Obtener modelos
@@ -27,16 +28,24 @@ router.post('/session', authenticate, (req, res) => {
 
 // Chat con contexto
 router.post('/chat', authenticate, async (req, res) => {
-    const { prompt, model, sessionId } = req.body;
+    const { prompt, model, sessionId, chatId } = req.body;
     const selectedModel = model || 'pardos-assistant:latest';
     
     console.log('Received prompt:', prompt);
     console.log('Using model:', selectedModel);
-    console.log('Session ID:', sessionId);
+    console.log('Chat ID:', chatId);
 
     try {
-        // Obtener contexto de la sesión
-        const context = sessionService.getContext(sessionId);
+        // Obtener contexto del chat si existe
+        let context = '';
+        if (chatId) {
+            const chat = chatService.getChat(req.user.username, chatId);
+            if (chat && chat.messages.length > 0) {
+                context = chat.messages.slice(-5).map(m => 
+                    `Usuario: ${m.message}\nAsistente: ${m.response}`
+                ).join('\n');
+            }
+        }
         
         // Construir prompt con contexto
         const fullPrompt = context ? 
@@ -46,9 +55,9 @@ router.post('/chat', authenticate, async (req, res) => {
         // Generar respuesta
         const reply = await ollamaService.generateResponse(selectedModel, fullPrompt);
         
-        // Guardar en sesión
-        if (sessionId) {
-            sessionService.addMessage(sessionId, prompt, reply);
+        // Guardar en historial de chat
+        if (chatId) {
+            chatService.addMessage(req.user.username, chatId, prompt, reply);
         }
 
         res.json({ reply });

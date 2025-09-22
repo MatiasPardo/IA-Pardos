@@ -70,7 +70,7 @@ Este proyecto contiene:
 - 🛡️ Protección de todas las aplicaciones
 - 🚪 Logout funcional
 
-### 🤖 **Nuevo Modelo: AppAnalyzer**
+### 🤖 **Nuevo Modelo: InterAnalyzer**
 - 📊 Análisis de aplicaciones completas
 - 🏗️ Identificación de arquitecturas
 - 🔍 Detección de patrones y tecnologías
@@ -85,7 +85,7 @@ Este proyecto contiene:
 - 🚀 Preparado para crecimiento
 
 ### 🌐 **Nueva Aplicación Web**
-- 📱 AppAnalyzer - Interfaz para análisis
+- 📱 InterAnalyzer - Interfaz para análisis
 - 📤 Upload de archivos ZIP (simulado)
 - 💬 Chat especializado en análisis
 - 🎨 Diseño único y atractivo
@@ -198,7 +198,7 @@ docker stats
   http://<EC2_PUBLIC_IP>/code/index.html
   ```
 
-- **AppAnalyzer - Análisis de Apps (🔒 Requiere Login):**
+- **InterAnalyzer - Análisis de Apps (🔒 Requiere Login):**
   ```
   http://<EC2_PUBLIC_IP>/analyzer/index.html
   ```

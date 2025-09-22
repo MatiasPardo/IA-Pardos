@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Interbanking AI</title>
+    <style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #f0f0f0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.header {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.logo {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #fff;
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  background: #6c63ff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+.logout-btn {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+.logout-btn:hover {
+  background: #ff6b6b;
+  color: white;
+}
+.container {
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.welcome {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+.welcome h1 {
+  font-size: 2.5rem;
+  margin: 0 0 1rem 0;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+.welcome p {
+  font-size: 1.2rem;
+  color: #e0e0e0;
+  margin: 0;
+}
+.ai-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  width: 100%;
+  max-width: 900px;
+}
+.ai-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 2rem;
+  text-align: center;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.ai-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+.ai-card:hover::before {
+  transform: translateX(100%);
+}
+.ai-card:hover {
+  transform: translateY(-10px);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+.intercode {
+  background: linear-gradient(135deg, rgba(108, 99, 255, 0.2), rgba(88, 76, 226, 0.2));
+}
+.intercode:hover {
+  border-color: #6c63ff;
+  box-shadow: 0 20px 40px rgba(108, 99, 255, 0.3);
+}
+.interanalyzer {
+  background: linear-gradient(135deg, rgba(17, 153, 142, 0.2), rgba(14, 123, 115, 0.2));
+}
+.interanalyzer:hover {
+  border-color: #11998e;
+  box-shadow: 0 20px 40px rgba(17, 153, 142, 0.3);
+}
+.ai-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+.ai-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+.ai-description {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #e0e0e0;
+  margin-bottom: 1.5rem;
+}
+.ai-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+}
+.ai-features li {
+  padding: 0.3rem 0;
+  font-size: 0.9rem;
+  color: #d0d0d0;
+}
+.ai-features li::before {
+  content: "✓ ";
+  color: #4ade80;
+  font-weight: bold;
+}
+.ai-button {
+  background: linear-gradient(45deg, #6c63ff, #584ce2);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+}
+.intercode .ai-button {
+  background: linear-gradient(45deg, #6c63ff, #584ce2);
+}
+.interanalyzer .ai-button {
+  background: linear-gradient(45deg, #11998e, #0e7b73);
+}
+.ai-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+.chat-access {
+  margin-top: 2rem;
+  text-align: center;
+}
+.chat-link {
+  display: inline-block;
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+.chat-link:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+@media (max-width: 768px) {
+  .ai-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .welcome h1 {
+    font-size: 2rem;
+  }
+  .container {
+    padding: 2rem 1rem;
+  }
+}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🤖 Interbanking AI</div>
+        <div class="user-info">
+            <div class="user-avatar" id="user-avatar"></div>
+            <span id="user-name">Usuario</span>
+            <button class="logout-btn" id="logout-btn">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="welcome">
+            <h1>Bienvenido al Dashboard de IA</h1>
+            <p>Selecciona la herramienta de inteligencia artificial que necesitas</p>
+        </div>
+
+        <div class="ai-grid">
+            <div class="ai-card intercode" onclick="goToInterCode()">
+                <span class="ai-icon">🚀</span>
+                <h2 class="ai-title">InterCode</h2>
+                <p class="ai-description">Generador de código Java inteligente con buenas prácticas</p>
+                <ul class="ai-features">
+                    <li>Código Java 8+ optimizado</li>
+                    <li>Principios SOLID aplicados</li>
+                    <li>Patrones de diseño</li>
+                    <li>Syntax highlighting</li>
+                </ul>
+                <button class="ai-button">Generar Código</button>
+            </div>
+
+            <div class="ai-card interanalyzer" onclick="goToInterAnalyzer()">
+                <span class="ai-icon">🔍</span>
+                <h2 class="ai-title">InterAnalyzer</h2>
+                <p class="ai-description">Análisis inteligente de arquitecturas y aplicaciones</p>
+                <ul class="ai-features">
+                    <li>Análisis de arquitectura</li>
+                    <li>Detección de patrones</li>
+                    <li>Identificación de tecnologías</li>
+                    <li>Sugerencias de mejoras</li>
+                </ul>
+                <button class="ai-button">Analizar Aplicación</button>
+            </div>
+        </div>
+
+        <div class="chat-access">
+            <a href="/chat/index.html" class="chat-link">💬 Chat con Matías Pardo</a>
+        </div>
+    </div>
+
+    <script>
+document.addEventListener("DOMContentLoaded", () => {
+    const userAvatar = document.getElementById("user-avatar");
+    const userName = document.getElementById("user-name");
+    const logoutBtn = document.getElementById("logout-btn");
+
+    // Verificar autenticación
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
+    }
+
+    // Configurar usuario
+    const username = localStorage.getItem('username') || 'Usuario';
+    userName.textContent = username;
+    userAvatar.textContent = username.charAt(0).toUpperCase();
+
+    // Logout
+    logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('username');
+        window.location.href = '/login.html';
+    });
+});
+
+function goToInterCode() {
+    window.location.href = '/code/index.html';
+}
+
+function goToInterAnalyzer() {
+    window.location.href = '/analyzer/index.html';
+}
+    </script>
+</body>
+</html>

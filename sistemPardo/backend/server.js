@@ -4,6 +4,7 @@ const cors = require('cors');
 // Importar rutas
 const authRoutes = require('./routes/auth');
 const chatRoutes = require('./routes/chat');
+const chatsRoutes = require('./routes/chats');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -22,6 +23,7 @@ console.log("Ollama URL:", process.env.OLLAMA_URL || 'http://ollama:11434');
 // Rutas
 app.use('/api', authRoutes);
 app.use('/api', chatRoutes);
+app.use('/api/chats', chatsRoutes);
 
 // Iniciar servidor
 const server = app.listen(port, () => {

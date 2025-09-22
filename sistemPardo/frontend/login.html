@@ -110,7 +110,7 @@ document.getElementById('auth-form').addEventListener('submit', async (e) => {
             if (isLogin) {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('username', data.username);
-                window.location.href = '/chat/index.html';
+                window.location.href = '/dashboard.html';
             } else {
                 errorMsg.textContent = 'Usuario creado. Ahora inicia sesión.';
                 errorMsg.style.color = '#28a745';
@@ -135,7 +135,7 @@ if (localStorage.getItem('token')) {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     }).then(response => {
         if (response.ok) {
-            window.location.href = '/chat/index.html';
+            window.location.href = '/dashboard.html';
         }
     });
 }
