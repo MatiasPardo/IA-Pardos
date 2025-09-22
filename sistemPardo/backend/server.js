@@ -1,16 +1,14 @@
-
 const express = require('express');
 const cors = require('cors');
-const fetch = require('node-fetch');
+
+// Importar rutas
+const authRoutes = require('./routes/auth');
+const chatRoutes = require('./routes/chat');
 
 const app = express();
 const port = process.env.PORT || 3000;
-const ollamaUrl = process.env.OLLAMA_URL || 'http://ollama:11434';
 
-// Only allow frontend origin
-const allowedOrigins = ['http://localhost', 'http://127.0.0.1'];
-
-
+// Configuración CORS
 app.use(cors({
     origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -19,88 +17,18 @@ app.use(cors({
 
 app.use(express.json());
 
-console.log("Ollama URL:", ollamaUrl);
+console.log("Ollama URL:", process.env.OLLAMA_URL || 'http://ollama:11434');
 
-app.get('/api/models', async (req, res) => {
-    console.log('Consultando modelos de Ollama...');
-    
-    try {
-        const response = await fetch(ollamaUrl + "/api/tags");
-        
-        if (!response.ok) {
-            console.error(`Error HTTP de Ollama: ${response.status} ${response.statusText}`);
-            return res.status(response.status).json({ 
-                error: 'Error al consultar modelos' 
-            });
-        }
-        
-        const data = await response.json();
-        res.json(data);
-        console.log('Modelos obtenidos:', data);
-        
-    } catch (error) {
-        console.error('Error al contactar Ollama para modelos:', error);
-        res.status(500).json({ error: 'Error al contactar Ollama' });
-    }
-});
+// Rutas
+app.use('/api', authRoutes);
+app.use('/api', chatRoutes);
 
-app.post('/api/chat', async (req, res) => {
-    const { prompt, model } = req.body;
-    const selectedModel = model || 'pardos-assistant:latest'; // Default al modelo personalizado
-    
-    console.log('Received prompt:', prompt);
-    console.log('Using model:', selectedModel);
-
-    try {
-        const response = await fetch(ollamaUrl + "/api/generate", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: selectedModel,
-                prompt: `Un persona consulta: ${prompt}`,
-                stream: false
-            })
-        });
-
-        const rawText = await response.text();
-
-        let data;
-        try {
-            data = JSON.parse(rawText);
-        } catch (parseError) {
-            console.error('Error al parsear JSON:', parseError);
-            console.error('Texto recibido que falló al parsear:', rawText);
-            return res.status(500).json({ 
-                error: 'Respuesta inválida del modelo (no es JSON)', 
-                raw: rawText 
-            });
-        }
-
-        if (!response.ok) {
-            console.error(`Error HTTP de Ollama: ${response.status} ${response.statusText}`);
-            console.error('Detalle del error:', data);
-            return res.status(response.status).json({ 
-                error: 'Error del modelo', 
-                details: data 
-            });
-        }
-
-        res.json({ reply: data.response || 'Sin respuesta procesable.' });
-        console.log('Response from Ollama:');
-        console.log(data);
-
-    } catch (error) {
-        console.error('Error al contactar Ollama:', error);
-        res.status(500).json({ error: 'Error al contactar Ollama' });
-    }
-});
-
-
+// Iniciar servidor
 const server = app.listen(port, () => {
     console.log(`Backend running on port ${port}`);
 });
 
-// Aumentar timeout del servidor a 10 minutos
-server.timeout = 600000; // 10 minutos en milisegundos
+// Configuración de timeouts
+server.timeout = 600000; // 10 minutos
 server.keepAliveTimeout = 600000;
 server.headersTimeout = 610000;

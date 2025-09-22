@@ -1,12 +1,12 @@
-
-# IA Pardo Final Setup 🚀
+# IA Pardo Complete Platform 🚀
 
 Este proyecto contiene:
-✅ **Backend** (Node.js) → API que comunica con Ollama
-✅ **Ollama** (IA) → 3 modelos de lenguaje disponibles
-✅ **Frontend** (HTML estático) → Servido por NGINX
+✅ **Backend** (Node.js) → API modular con autenticación JWT
+✅ **Ollama** (IA) → 4 modelos de lenguaje especializados
+✅ **Frontend** (HTML estático) → 4 aplicaciones web protegidas
+✅ **Sistema de Login** → Autenticación con sesiones persistentes
 ✅ **Portainer** → Administración web de Docker
-✅ **Configuración completa** en un solo `docker-compose.yml`
+✅ **Arquitectura modular** → Código limpio y escalable
 
 ---
 
@@ -18,20 +18,25 @@ Este proyecto contiene:
     ↓ Puerto 80
 📦 NGINX (Frontend)
     │
-    ├── Sirve: index.html, chat/index.html
+    ├── Sirve: login.html, index.html
+    ├── Apps: chat/, code/, analyzer/
     └── Proxy: /api/ → Backend
     │
     ↓ Red interna: pardos-network
 📦 Backend (Node.js) - Puerto 3000
     │
+    ├── Autenticación JWT
+    ├── Sesiones con contexto
+    ├── Arquitectura modular
     └── Conecta: http://ollama:11434
     │
     ↓ Red interna: pardos-network
 🤖 Ollama (IA)
     │
     ├── llama3:8b (modelo base)
-    ├── pardos-assistant:latest (personalizado)
-    └── llama3-base (base optimizado)
+    ├── pardos-assistant:latest (chat personal)
+    ├── pardos-code:latest (generador Java)
+    └── pardos-analyzer:latest (análisis apps)
 
 📊 Portainer (Puerto 9000)
     └── Administra todos los contenedores
@@ -41,9 +46,9 @@ Este proyecto contiene:
 
 | Servicio | Contenedor | Puerto | Función |
 |----------|------------|--------|----------|
-| **Frontend** | `pardos-frontend` | 80 | Interfaz web + Proxy NGINX |
-| **Backend** | `pardos-backend` | 3000 | API REST para chat |
-| **Ollama** | `pardos-ollama` | 11434 (interno) | Modelos de IA |
+| **Frontend** | `pardos-frontend` | 80 | 4 Apps web + Proxy NGINX |
+| **Backend** | `pardos-backend` | 3000 | API REST con JWT + Sesiones |
+| **Ollama** | `pardos-ollama` | 11434 (interno) | 4 Modelos de IA |
 | **Portainer** | `pardos-portainer` | 9000 | Administración Docker |
 
 ### 🌐 **Red y Volúmenes:**
@@ -52,6 +57,38 @@ Este proyecto contiene:
 - **Volúmenes:**
   - `ollama_data` - Modelos y configuración de Ollama
   - `portainer_data` - Configuración de Portainer
+  - `backend_data` - Usuarios y datos persistentes
+
+---
+
+## 🚀 **NUEVAS FUNCIONALIDADES AGREGADAS**
+
+### ✨ **Sistema de Autenticación Completo**
+- 🔐 Login/Registro con JWT
+- 💾 Persistencia de usuarios en JSON
+- 🔄 Sesiones con contexto de conversación
+- 🛡️ Protección de todas las aplicaciones
+- 🚪 Logout funcional
+
+### 🤖 **Nuevo Modelo: AppAnalyzer**
+- 📊 Análisis de aplicaciones completas
+- 🏗️ Identificación de arquitecturas
+- 🔍 Detección de patrones y tecnologías
+- 📝 Generación de documentación
+- 💡 Sugerencias de mejoras
+
+### 🏗️ **Refactorización del Backend**
+- 📁 Arquitectura modular y escalable
+- 🔧 Separación de responsabilidades
+- 🧪 Código más testeable
+- 📚 Mejor mantenibilidad
+- 🚀 Preparado para crecimiento
+
+### 🌐 **Nueva Aplicación Web**
+- 📱 AppAnalyzer - Interfaz para análisis
+- 📤 Upload de archivos ZIP (simulado)
+- 💬 Chat especializado en análisis
+- 🎨 Diseño único y atractivo
 
 ---
 
@@ -141,19 +178,29 @@ docker stats
 
 ### 🌐 **Accesos finales**
 
+- **Sistema de Login:**
+  ```
+  http://<EC2_PUBLIC_IP>/login.html
+  ```
+
 - **Frontend presentación:**
   ```
   http://<EC2_PUBLIC_IP>
   ```
 
-- **Chat con Matías Pardo:**
+- **Chat con Matías Pardo (🔒 Requiere Login):**
   ```
   http://<EC2_PUBLIC_IP>/chat/index.html
   ```
 
-- **InterCode (Generador de Código Java):**
+- **InterCode - Generador Java (🔒 Requiere Login):**
   ```
   http://<EC2_PUBLIC_IP>/code/index.html
+  ```
+
+- **AppAnalyzer - Análisis de Apps (🔒 Requiere Login):**
+  ```
+  http://<EC2_PUBLIC_IP>/analyzer/index.html
   ```
 
 - **Portainer (Administración Docker):**
@@ -163,38 +210,106 @@ docker stats
 
 ### 🔌 **API Endpoints del Backend**
 
-| Endpoint | Método | Descripción | Puerto |
-|----------|--------|-------------|--------|
-| `/api/chat` | POST | Chat con modelos de IA | 3000 |
-| `/api/models` | GET | Listar modelos disponibles | 3000 |
+| Endpoint | Método | Descripción | Auth | Puerto |
+|----------|--------|-------------|------|--------|
+| `/api/register` | POST | Registro de usuarios | ❌ | 3000 |
+| `/api/login` | POST | Inicio de sesión | ❌ | 3000 |
+| `/api/verify` | GET | Verificar token JWT | ✅ | 3000 |
+| `/api/session` | POST | Crear sesión de chat | ✅ | 3000 |
+| `/api/chat` | POST | Chat con modelos de IA | ✅ | 3000 |
+| `/api/models` | GET | Listar modelos disponibles | ✅ | 3000 |
 
-#### **1. Chat con IA - `/api/chat`**
-**Descripción:** Envía mensajes a los modelos de IA y recibe respuestas.
+#### **1. Registro - `/api/register`**
+**Descripción:** Registra un nuevo usuario.
+
+**Body (JSON):**
+```json
+{
+  "username": "tu_usuario",
+  "password": "tu_contraseña"
+}
+```
+
+#### **2. Login - `/api/login`**
+**Descripción:** Inicia sesión y obtiene token JWT.
+
+**Body (JSON):**
+```json
+{
+  "username": "tu_usuario",
+  "password": "tu_contraseña"
+}
+```
+
+**Respuesta:**
+```json
+{
+  "token": "jwt_token_aqui",
+  "username": "tu_usuario"
+}
+```
+
+#### **3. Crear Sesión - `/api/session`**
+**Descripción:** Crea una sesión de chat con contexto.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Body (JSON):**
+```json
+{
+  "model": "pardos-assistant:latest" // Opcional
+}
+```
+
+#### **4. Chat con IA - `/api/chat`**
+**Descripción:** Envía mensajes a los modelos de IA con contexto de sesión.
+
+**Headers:** `Authorization: Bearer <token>`
 
 **Body (JSON):**
 ```json
 {
   "prompt": "Tu mensaje aquí",
-  "model": "nombre-del-modelo" // Opcional, default: pardos-assistant:latest
+  "model": "nombre-del-modelo", // Opcional
+  "sessionId": "id_de_sesion" // Para mantener contexto
 }
 ```
 
 **Ejemplos:**
 ```bash
-# Modelo personalizado (default)
-curl -X POST http://<EC2_PUBLIC_IP>:3000/api/chat \
+# 1. Registrarse
+curl -X POST http://<EC2_PUBLIC_IP>:3000/api/register \
   -H "Content-Type: application/json" \
-  -d '{"prompt": "Hola Matías, contame sobre tu experiencia"}'
+  -d '{"username": "usuario", "password": "contraseña"}'
 
-# Modelo de código Java
-curl -X POST http://<EC2_PUBLIC_IP>:3000/api/chat \
+# 2. Hacer login
+curl -X POST http://<EC2_PUBLIC_IP>:3000/api/login \
   -H "Content-Type: application/json" \
-  -d '{"prompt": "Crea una clase Usuario con patrón Builder", "model": "pardos-code:latest"}'
+  -d '{"username": "usuario", "password": "contraseña"}'
 
-# Modelo base específico
+# 3. Crear sesión (con token)
+curl -X POST http://<EC2_PUBLIC_IP>:3000/api/session \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <tu_token>" \
+  -d '{"model": "pardos-assistant:latest"}'
+
+# 4. Chat con contexto
 curl -X POST http://<EC2_PUBLIC_IP>:3000/api/chat \
   -H "Content-Type: application/json" \
-  -d '{"prompt": "Hello, how are you?", "model": "llama3:8b"}'
+  -H "Authorization: Bearer <tu_token>" \
+  -d '{"prompt": "Hola Matías", "sessionId": "<session_id>"}'
+
+# 5. Generador de código Java
+curl -X POST http://<EC2_PUBLIC_IP>:3000/api/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <tu_token>" \
+  -d '{"prompt": "Crea clase Usuario con Builder", "model": "pardos-code:latest"}'
+
+# 6. Análisis de aplicaciones
+curl -X POST http://<EC2_PUBLIC_IP>:3000/api/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <tu_token>" \
+  -d '{"prompt": "Analiza esta arquitectura", "model": "pardos-analyzer:latest"}'
 ```
 
 **Respuesta:**
@@ -204,12 +319,15 @@ curl -X POST http://<EC2_PUBLIC_IP>:3000/api/chat \
 }
 ```
 
-#### **2. Listar Modelos - `/api/models`**
+#### **5. Listar Modelos - `/api/models`**
 **Descripción:** Obtiene todos los modelos instalados en Ollama.
+
+**Headers:** `Authorization: Bearer <token>`
 
 **Ejemplo:**
 ```bash
-curl http://<EC2_PUBLIC_IP>:3000/api/models
+curl http://<EC2_PUBLIC_IP>:3000/api/models \
+  -H "Authorization: Bearer <tu_token>"
 ```
 
 **Respuesta:**
@@ -222,12 +340,17 @@ curl http://<EC2_PUBLIC_IP>:3000/api/models
       "digest": "sha256:..."
     },
     {
-      "name": "llama3:8b",
+      "name": "pardos-code:latest",
       "size": 4661224676,
       "digest": "sha256:..."
     },
     {
-      "name": "llama3-base",
+      "name": "pardos-analyzer:latest",
+      "size": 4661224676,
+      "digest": "sha256:..."
+    },
+    {
+      "name": "llama3:8b",
       "size": 4661224676,
       "digest": "sha256:..."
     }
@@ -241,22 +364,41 @@ curl http://<EC2_PUBLIC_IP>:3000/api/models
 
 **Headers necesarios:**
 - `Content-Type: application/json`
+- `Authorization: Bearer <token>` (para endpoints protegidos)
+
+**Flujo de testing:**
+1. POST `/api/register` - Crear usuario
+2. POST `/api/login` - Obtener token
+3. POST `/api/session` - Crear sesión
+4. POST `/api/chat` - Chatear con contexto
 
 **Timeout configurado:** 10 minutos (para respuestas largas de IA)
 
 ### 🤖 **Modelos de IA disponibles**
 
-El sistema incluye **3 modelos de Ollama:**
+El sistema incluye **4 modelos de Ollama:**
 
 1. **`llama3:8b`** - Modelo base de Meta
-2. **`pardos-assistant:latest`** - Modelo personalizado con datos de Matías Pardo
+   - Modelo general sin personalización
+   - Usado como base para otros modelos
+
+2. **`pardos-assistant:latest`** - Chat personal con Matías Pardo
    - Entrenado con información personal y profesional
    - Responde como Matías en primera persona
    - Incluye experiencia laboral, proyectos y estudios
-3. **`pardos-code:latest`** - Modelo especializado en código Java
+   - **Temperatura:** 1.0 (creativo y natural)
+
+3. **`pardos-code:latest`** - Generador de código Java
    - Optimizado para generar código con buenas prácticas
    - Sigue principios SOLID y patrones de diseño
    - Respuestas directas sin explicaciones adicionales
+   - **Temperatura:** 0.1 (preciso y determinístico)
+
+4. **`pardos-analyzer:latest`** - Analizador de aplicaciones
+   - Especializado en análisis de arquitectura de software
+   - Identifica patrones, tecnologías y mejoras
+   - Contexto extendido (8192 tokens)
+   - **Temperatura:** 0.3 (balance entre precisión y creatividad)
 
 ### ⚙️ **Parámetros de configuración de modelos**
 
@@ -267,6 +409,7 @@ Cada modelo usa parámetros específicos en sus archivos `diag` para optimizar s
 - **Función:** Controla la creatividad/aleatoriedad de las respuestas
 - **Valores:**
   - `0.1` (pardos-code) - Respuestas muy precisas y determinísticas
+  - `0.3` (pardos-analyzer) - Balance entre creatividad y precisión
   - `0.7` (llama3-base) - Balance entre creatividad y precisión
   - `1.0` (pardos-assistant) - Respuestas más creativas y naturales
 
@@ -277,7 +420,9 @@ Cada modelo usa parámetros específicos en sus archivos `diag` para optimizar s
 
 #### **PARAMETER num_ctx**
 - **Función:** Define el tamaño del contexto (memoria)
-- **Valor:** `4096` tokens - Permite conversaciones largas
+- **Valores:** 
+  - `4096` tokens - Conversaciones normales
+  - `8192` tokens - Análisis de aplicaciones (pardos-analyzer)
 
 #### **PARAMETER stop**
 - **Función:** Tokens que indican fin de respuesta
@@ -293,8 +438,47 @@ Cada modelo usa parámetros específicos en sus archivos `diag` para optimizar s
 # Desde línea de comandos
 docker exec -it pardos-ollama ollama list
 
-# Desde API del backend
-curl http://<EC2_PUBLIC_IP>:3000/api/models
+# Desde API del backend (requiere token)
+curl http://<EC2_PUBLIC_IP>:3000/api/models \
+  -H "Authorization: Bearer <tu_token>"
+```
+
+---
+
+### 🔐 **Sistema de Autenticación**
+
+**Características:**
+- **JWT Tokens** - Autenticación sin librerías externas
+- **Persistencia** - Los usuarios se guardan en archivo JSON
+- **Sesiones con contexto** - Mantiene conversaciones largas
+- **Protección completa** - Todas las apps requieren login
+- **Logout funcional** - Limpia tokens del navegador
+
+**Flujo de usuario:**
+1. Acceder a cualquier app → Redirección a `/login.html`
+2. Registrarse o iniciar sesión
+3. Token se guarda en localStorage
+4. Acceso a todas las aplicaciones
+5. Token persiste al recargar página
+6. Botón "Salir" limpia sesión
+
+### 🏗️ **Arquitectura del Backend**
+
+**Estructura modular:**
+```
+backend/
+├── server.js              # Servidor principal
+├── middleware/
+│   └── auth.js            # Middleware JWT
+├── routes/
+│   ├── auth.js            # Login/registro
+│   └── chat.js            # Chat/modelos
+├── services/
+│   ├── userService.js     # Gestión usuarios
+│   ├── sessionService.js  # Sesiones con contexto
+│   └── ollamaService.js   # Comunicación IA
+└── utils/
+    └── auth.js            # Utilidades JWT
 ```
 
 ---
@@ -321,9 +505,11 @@ docker-compose up -d --force-recreate
 ---
 
 ⚠ **NOTAS IMPORTANTES:**
-- **Backend expuesto en puerto 3000** para acceso directo con Postman/curl
-- **Ollama interno** - Solo el backend puede comunicarse con él
-- **Sistema sin SSL** - Funciona completamente con HTTP
-- **Timeout de 10 minutos** - Configurado en backend y frontend
-- **3 modelos disponibles** - Personalizado, base y optimizado
-- **Portainer integrado** - Administración web en puerto 9000
+- **Sistema completo con login** - 4 aplicaciones protegidas
+- **Backend modular** - Código limpio y escalable
+- **4 modelos especializados** - Chat, código, análisis y base
+- **Sesiones persistentes** - Contexto mantenido entre mensajes
+- **Datos persistentes** - Usuarios y sesiones sobreviven reinicios
+- **Sin SSL** - Funciona completamente con HTTP
+- **Timeout de 10 minutos** - Para respuestas largas de IA
+

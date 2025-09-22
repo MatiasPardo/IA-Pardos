@@ -12,6 +12,7 @@ services:
       - ./assistant/diag:/app/diag
       - ./assistant/diag-base:/app/diag-base
       - ./assistant/diag-q:/app/diag-q
+      - ./assistant/diag-analyzer:/app/diag-analyzer
     restart: unless-stopped
     command: >
       sh -c "ollama serve &
@@ -19,6 +20,7 @@ services:
              ollama pull llama3:8b &&
              ollama create pardos-assistant -f /app/diag &&
              ollama create pardos-code -f /app/diag-q &&
+             ollama create pardos-analyzer -f /app/diag-analyzer &&
              wait"
     networks:
       - pardos-network
@@ -30,6 +32,8 @@ services:
       - "3000"
     ports:
       - "3000:3000"
+    volumes:
+      - backend_data:/app/data
     environment:
       - NODE_ENV=production
       - OLLAMA_URL=http://ollama:11434
@@ -50,6 +54,9 @@ services:
       - pardos-backend
     networks:
       - pardos-network
+    command: >
+      sh -c "chmod -R 755 /usr/share/nginx/html &&
+             nginx -g 'daemon off;'"
 
   portainer:
     image: portainer/portainer-ce:latest
@@ -66,6 +73,7 @@ services:
 volumes:
   ollama_data:
   portainer_data:
+  backend_data:
 
 networks:
   pardos-network:

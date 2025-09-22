@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Matías Pardo</title>
+    <style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #1a1a2e;
+  color: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+.login-container {
+  background: #16213e;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 300px;
+  text-align: center;
+}
+.form-group {
+  margin-bottom: 1rem;
+  text-align: left;
+}
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #6c63ff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+button:hover {
+  background: #584ce2;
+}
+.toggle {
+  color: #6c63ff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.error {
+  color: #ff6b6b;
+  margin-top: 0.5rem;
+}
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2 id="form-title">Iniciar Sesión</h2>
+        <form id="auth-form">
+            <div class="form-group">
+                <label for="username">Usuario:</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" id="submit-btn">Iniciar Sesión</button>
+            <div class="toggle" id="toggle-mode">¿No tienes cuenta? Regístrate</div>
+            <div class="error" id="error-msg"></div>
+        </form>
+    </div>
+
+    <script>
+let isLogin = true;
+
+document.getElementById('toggle-mode').addEventListener('click', () => {
+    isLogin = !isLogin;
+    document.getElementById('form-title').textContent = isLogin ? 'Iniciar Sesión' : 'Registrarse';
+    document.getElementById('submit-btn').textContent = isLogin ? 'Iniciar Sesión' : 'Registrarse';
+    document.getElementById('toggle-mode').textContent = isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión';
+    document.getElementById('error-msg').textContent = '';
+});
+
+document.getElementById('auth-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const errorMsg = document.getElementById('error-msg');
+    
+    try {
+        const endpoint = isLogin ? '/api/login' : '/api/register';
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            if (isLogin) {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('username', data.username);
+                window.location.href = '/chat/index.html';
+            } else {
+                errorMsg.textContent = 'Usuario creado. Ahora inicia sesión.';
+                errorMsg.style.color = '#28a745';
+                isLogin = true;
+                document.getElementById('form-title').textContent = 'Iniciar Sesión';
+                document.getElementById('submit-btn').textContent = 'Iniciar Sesión';
+                document.getElementById('toggle-mode').textContent = '¿No tienes cuenta? Regístrate';
+            }
+        } else {
+            errorMsg.textContent = data.error;
+            errorMsg.style.color = '#ff6b6b';
+        }
+    } catch (error) {
+        errorMsg.textContent = 'Error de conexión';
+        errorMsg.style.color = '#ff6b6b';
+    }
+});
+
+// Verificar si ya está logueado
+if (localStorage.getItem('token')) {
+    fetch('/api/verify', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    }).then(response => {
+        if (response.ok) {
+            window.location.href = '/chat/index.html';
+        }
+    });
+}
+    </script>
+</body>
+</html>

@@ -68,7 +68,16 @@ footer {
 </head>
 <body>
     <div class="container">
-        <h1 style="font-weight: bold;">Chat en vivo con Matías Pardo</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h1 style="font-weight: bold; margin: 0;">Chat con Matías Pardo</h1>
+            <div>
+                <span id="username" style="margin-right: 1rem;"></span>
+                <button id="logout" style="background: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">Salir</button>
+            </div>
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <button id="new-chat" style="background: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">Nueva Conversación</button>
+        </div>
         <div id="chat-area">
             <div id="chat-messages"></div>
             <div id="chat-input-area">
@@ -81,9 +90,44 @@ footer {
     
     <script>
 document.addEventListener("DOMContentLoaded", () => {
+  // Verificar autenticación
+  const token = localStorage.getItem('token');
+  const username = localStorage.getItem('username');
+  
+  if (!token) {
+    window.location.href = '/login.html';
+    return;
+  }
+  
+  document.getElementById('username').textContent = `Hola, ${username}`;
+  
   const chatMessages = document.getElementById("chat-messages");
   const chatInput = document.getElementById("chat-input");
   const chatSend = document.getElementById("chat-send");
+  
+  let sessionId = null;
+  
+  // Crear sesión al cargar la página
+  async function createSession() {
+    try {
+      const response = await fetch('/api/session', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ model: 'pardos-assistant:latest' })
+      });
+      const data = await response.json();
+      sessionId = data.sessionId;
+      console.log('Sesión creada:', sessionId);
+    } catch (error) {
+      console.error('Error creando sesión:', error);
+    }
+  }
+  
+  // Crear sesión al iniciar
+  createSession();
 
   async function handleUserInput() {
     const userInput = chatInput.value.trim();
@@ -101,8 +145,14 @@ document.addEventListener("DOMContentLoaded", () => {
       
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userInput }),
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          prompt: userInput, 
+          sessionId: sessionId 
+        }),
         signal: controller.signal
       });
       
@@ -134,6 +184,19 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   chatSend.addEventListener("click", handleUserInput);
+  
+  // Botón para nueva conversación
+  document.getElementById("new-chat").addEventListener("click", () => {
+    chatMessages.innerHTML = "";
+    createSession();
+  });
+  
+  // Botón logout
+  document.getElementById("logout").addEventListener("click", () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    window.location.href = '/login.html';
+  });
 });
     </script>
 </body>
