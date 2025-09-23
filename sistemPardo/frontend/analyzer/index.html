@@ -11,8 +11,64 @@ body {
   background: linear-gradient(135deg, #2d1b69 0%, #11998e 100%);
   color: #f0f0f0;
   display: flex;
-  flex-direction: column;
   min-height: 100vh;
+}
+.sidebar {
+  width: 300px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2rem 1rem;
+  overflow-y: auto;
+}
+.sidebar h3 {
+  color: #00d4aa;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+.conversation-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.8rem;
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+.conversation-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-left-color: #00d4aa;
+}
+.conversation-item.active {
+  background: rgba(0, 212, 170, 0.2);
+  border-left-color: #00d4aa;
+}
+.conversation-title {
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+}
+.conversation-preview {
+  font-size: 0.8rem;
+  color: #a0a0a0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.new-conversation {
+  background: linear-gradient(45deg, #00d4aa, #11998e);
+  color: white;
+  border: none;
+  padding: 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 .user-info {
   position: absolute;
@@ -21,6 +77,7 @@ body {
   display: flex;
   align-items: center;
   gap: 1rem;
+  z-index: 10;
 }
 #username {
   color: #a0a0a0;
@@ -38,6 +95,8 @@ body {
   margin: auto;
   padding: 2rem;
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 .header {
   text-align: center;
@@ -108,10 +167,11 @@ body {
   backdrop-filter: blur(10px);
   border-radius: 15px;
   padding: 1.5rem;
-  height: 500px;
+  height: 400px;
   display: flex;
   flex-direction: column;
   border: 1px solid rgba(0, 212, 170, 0.2);
+  flex: 1;
 }
 #chat-messages {
   flex: 1;
@@ -238,40 +298,51 @@ footer {
     </style>
 </head>
 <body>
-    <div class="user-info">
-        <span id="username"></span>
-        <button id="logout">Salir</button>
+    <div class="sidebar">
+        <button class="new-conversation" id="new-conversation">+ Nueva Conversación</button>
+        <h3>Historial</h3>
+        <div id="conversations-list">
+            <!-- Conversaciones se cargan aquí -->
+        </div>
     </div>
     
-    <div class="container">
-        <div class="header">
-            <h1>AppAnalyzer</h1>
-            <p>Analizador Inteligente de Aplicaciones</p>
+    <div class="main-content">
+        <div class="user-info">
+            <span id="username"></span>
+            <button id="logout">Salir</button>
         </div>
         
-        <div class="upload-section">
-            <h3>Subir Aplicación para Análisis</h3>
-            <div class="file-input-wrapper">
-                <input type="file" id="file-input" accept=".zip,.rar,.7z" />
-                <label for="file-input" class="file-input-label">
-                    📁 Seleccionar archivo ZIP
-                </label>
-                <button id="upload-btn" disabled>Subir y Analizar</button>
+        <div class="container">
+            <div class="header">
+                <h1>AppAnalyzer</h1>
+                <p>Analizador Inteligente de Aplicaciones</p>
             </div>
-            <div class="file-info" id="file-info">
-                Selecciona un archivo ZIP con el código de tu aplicación
+            
+            <div class="upload-section">
+                <h3>Subir Aplicación para Análisis</h3>
+                <div class="file-input-wrapper">
+                    <input type="file" id="file-input" accept=".zip,.rar,.7z" />
+                    <label for="file-input" class="file-input-label">
+                        📁 Seleccionar archivo ZIP
+                    </label>
+                    <button id="upload-btn" disabled>Subir y Analizar</button>
+                </div>
+                <div class="file-info" id="file-info">
+                    Selecciona un archivo ZIP con el código de tu aplicación (máx. 200MB)
+                </div>
+            </div>
+            
+            <div id="chat-area">
+                <div id="chat-messages"></div>
+                <div id="chat-input-area">
+                    <textarea id="chat-input" placeholder="Haz preguntas sobre tu aplicación..." disabled></textarea>
+                    <button id="chat-send" disabled>Preguntar</button>
+                </div>
             </div>
         </div>
         
-        <div id="chat-area">
-            <div id="chat-messages"></div>
-            <div id="chat-input-area">
-                <textarea id="chat-input" placeholder="Haz preguntas sobre tu aplicación..." disabled></textarea>
-                <button id="chat-send" disabled>Preguntar</button>
-            </div>
-        </div>
+        <footer>© 2025 AppAnalyzer - Powered by AI</footer>
     </div>
-    <footer>© 2025 AppAnalyzer - Powered by AI</footer>
     
     <script>
 document.addEventListener("DOMContentLoaded", async () => {
@@ -307,8 +378,90 @@ document.addEventListener("DOMContentLoaded", async () => {
   const fileInput = document.getElementById("file-input");
   const uploadBtn = document.getElementById("upload-btn");
   const fileInfo = document.getElementById("file-info");
+  const conversationsList = document.getElementById("conversations-list");
+  const newConversationBtn = document.getElementById("new-conversation");
   
   let sessionId = null;
+  let conversations = JSON.parse(localStorage.getItem('analyzer-conversations') || '[]');
+  let currentConversationId = null;
+
+  function saveConversations() {
+    localStorage.setItem('analyzer-conversations', JSON.stringify(conversations));
+  }
+
+  function loadConversations() {
+    conversationsList.innerHTML = '';
+    conversations.forEach(conv => {
+      const item = document.createElement('div');
+      item.className = `conversation-item ${conv.id === currentConversationId ? 'active' : ''}`;
+      item.innerHTML = `
+        <div class="conversation-title">${conv.title}</div>
+        <div class="conversation-preview">${conv.preview}</div>
+      `;
+      item.addEventListener('click', () => loadConversation(conv.id));
+      conversationsList.appendChild(item);
+    });
+  }
+
+  function createNewConversation(title = 'Nueva conversación', firstMessage = '') {
+    const id = Date.now().toString();
+    const conversation = {
+      id,
+      title,
+      preview: firstMessage.substring(0, 50) + '...',
+      messages: [],
+      sessionId: null,
+      createdAt: new Date().toISOString()
+    };
+    conversations.unshift(conversation);
+    currentConversationId = id;
+    sessionId = null;
+    saveConversations();
+    loadConversations();
+    clearChat();
+  }
+
+  function loadConversation(id) {
+    const conv = conversations.find(c => c.id === id);
+    if (!conv) return;
+    
+    currentConversationId = id;
+    sessionId = conv.sessionId;
+    loadConversations();
+    
+    chatMessages.innerHTML = '';
+    conv.messages.forEach(msg => {
+      addMessage(msg.content, msg.isUser);
+    });
+    
+    chatInput.disabled = !conv.sessionId;
+    chatSend.disabled = !conv.sessionId;
+  }
+
+  function updateCurrentConversation(userMessage, botMessage) {
+    const conv = conversations.find(c => c.id === currentConversationId);
+    if (conv) {
+      conv.messages.push(
+        { content: userMessage, isUser: true },
+        { content: botMessage, isUser: false }
+      );
+      if (conv.messages.length === 2) {
+        conv.title = userMessage.substring(0, 30) + '...';
+        conv.preview = botMessage.substring(0, 50) + '...';
+      }
+      saveConversations();
+      loadConversations();
+    }
+  }
+
+  function clearChat() {
+    chatMessages.innerHTML = '';
+    chatInput.disabled = true;
+    chatSend.disabled = true;
+    fileInput.value = '';
+    uploadBtn.disabled = true;
+    fileInfo.textContent = 'Selecciona un archivo ZIP con el código de tu aplicación (máx. 200MB)';
+  }
 
   function addMessage(content, isUser = false) {
     const messageDiv = document.createElement('div');
@@ -364,6 +517,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       const data = await response.json();
       sessionId = data.sessionId;
+      
+      // Actualizar conversación actual
+      const conv = conversations.find(c => c.id === currentConversationId);
+      if (conv) {
+        conv.sessionId = sessionId;
+        saveConversations();
+      }
     } catch (error) {
       console.error('Error creando sesión:', error);
     }
@@ -372,6 +532,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 200 * 1024 * 1024) {
+        fileInfo.textContent = '❌ Archivo muy grande. Máximo 200MB permitido.';
+        uploadBtn.disabled = true;
+        return;
+      }
       fileInfo.textContent = `Archivo seleccionado: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
       uploadBtn.disabled = false;
     }
@@ -380,6 +545,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   uploadBtn.addEventListener('click', async () => {
     const file = fileInput.files[0];
     if (!file) return;
+
+    if (!currentConversationId) {
+      createNewConversation(`Análisis: ${file.name}`, 'Analizando aplicación...');
+    }
 
     uploadBtn.disabled = true;
     fileInfo.textContent = 'Procesando archivo...';
@@ -409,11 +578,22 @@ document.addEventListener("DOMContentLoaded", async () => {
       chatInput.disabled = false;
       chatSend.disabled = false;
       
-      addMessage(`He analizado tu aplicación "${file.name}" y procesado ${result.filesAnalyzed} archivos. Ahora puedes hacerme preguntas sobre su arquitectura, funcionalidades, código o cualquier aspecto técnico.`);
+      const welcomeMessage = `He analizado tu aplicación "${file.name}" y procesado ${result.filesAnalyzed} archivos. Ahora puedes hacerme preguntas sobre su arquitectura, funcionalidades, código o cualquier aspecto técnico.`;
+      addMessage(welcomeMessage);
+      
+      // Actualizar conversación
+      const conv = conversations.find(c => c.id === currentConversationId);
+      if (conv) {
+        conv.messages.push({ content: welcomeMessage, isUser: false });
+        conv.title = `Análisis: ${file.name}`;
+        conv.preview = welcomeMessage.substring(0, 50) + '...';
+        saveConversations();
+        loadConversations();
+      }
       
     } catch (error) {
       console.error('Error:', error);
-      fileInfo.textContent = '❌ Error al procesar archivo';
+      fileInfo.textContent = '❌ Error al procesar archivo. Intenta con un archivo más pequeño.';
       uploadBtn.disabled = false;
     }
   });
@@ -457,6 +637,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       removeTypingIndicator();
       addMessage(data.reply);
       
+      updateCurrentConversation(userInput, data.reply);
+      
     } catch (error) {
       removeTypingIndicator();
       addMessage('❌ Error al analizar. Por favor, intenta nuevamente.');
@@ -475,6 +657,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   chatSend.addEventListener("click", handleUserInput);
   
+  newConversationBtn.addEventListener("click", () => {
+    createNewConversation();
+  });
+  
   document.getElementById('username').textContent = `Hola, ${username}`;
   document.getElementById('logout').addEventListener('click', () => {
     localStorage.removeItem('token');
@@ -482,9 +668,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.href = '/login.html';
   });
   
-  setTimeout(() => {
-    addMessage("¡Hola! Soy AppAnalyzer. Sube un archivo ZIP con tu aplicación y podrás hacerme preguntas sobre su arquitectura, código, funcionalidades y más.");
-  }, 500);
+  // Cargar conversaciones al inicio
+  loadConversations();
+  
+  if (conversations.length === 0) {
+    setTimeout(() => {
+      addMessage("¡Hola! Soy AppAnalyzer. Sube un archivo ZIP con tu aplicación y podrás hacerme preguntas sobre su arquitectura, código, funcionalidades y más.");
+    }, 500);
+  }
 });
     </script>
 </body>

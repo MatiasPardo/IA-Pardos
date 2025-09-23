@@ -9,7 +9,7 @@ const { authenticate } = require('../middleware/auth');
 // Configurar multer para upload de archivos
 const upload = multer({ 
     storage: multer.memoryStorage(),
-    limits: { fileSize: 50 * 1024 * 1024 } // 50MB max
+    limits: { fileSize: 200 * 1024 * 1024 } // 200MB max
 });
 
 // Obtener modelos

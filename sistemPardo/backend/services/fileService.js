@@ -21,6 +21,9 @@ class FileService {
             
             let fileContents = `Análisis de la aplicación: ${filename}\n\n`;
             let fileStructure = 'Estructura de archivos:\n';
+            let processedFiles = 0;
+            let totalContent = 0;
+            const maxTotalContent = 300000; // 300KB máximo de contenido total
             
             // Procesar estructura de archivos
             zipEntries.forEach(entry => {
@@ -31,25 +34,44 @@ class FileService {
             
             fileContents += fileStructure + '\n';
             
-            // Procesar contenido de archivos relevantes
-            zipEntries.forEach(entry => {
-                if (!entry.isDirectory && this.isRelevantFile(entry.entryName)) {
-                    try {
-                        const content = entry.getData().toString('utf8');
-                        if (content.length < 10000) { // Limitar tamaño
-                            fileContents += `\n=== ${entry.entryName} ===\n`;
-                            fileContents += content + '\n';
-                        }
-                    } catch (error) {
-                        // Ignorar archivos binarios o con errores de encoding
-                    }
-                }
-            });
+            // Procesar contenido de archivos relevantes (ordenados por importancia)
+            const relevantEntries = zipEntries
+                .filter(entry => !entry.isDirectory && this.isRelevantFile(entry.entryName))
+                .sort((a, b) => this.getFilePriority(a.entryName) - this.getFilePriority(b.entryName));
             
+            for (const entry of relevantEntries) {
+                if (totalContent >= maxTotalContent) break;
+                
+                try {
+                    const content = entry.getData().toString('utf8');
+                    const contentSize = content.length;
+                    
+                    if (contentSize < 30000 && totalContent + contentSize < maxTotalContent) {
+                        fileContents += `\n=== ${entry.entryName} ===\n`;
+                        fileContents += content + '\n';
+                        totalContent += contentSize;
+                        processedFiles++;
+                    }
+                } catch (error) {
+                    // Ignorar archivos binarios o con errores de encoding
+                }
+            }
+            
+            fileContents += `\n--- Resumen: ${processedFiles} archivos procesados ---\n`;
             return fileContents;
         } catch (error) {
             throw new Error('Error procesando archivo ZIP: ' + error.message);
         }
+    }
+    
+    getFilePriority(filename) {
+        const name = filename.toLowerCase();
+        if (name.includes('main') || name.includes('app') || name.includes('index')) return 1;
+        if (name.includes('service') || name.includes('controller')) return 2;
+        if (name.includes('model') || name.includes('entity')) return 3;
+        if (name.includes('config') || name.includes('properties')) return 4;
+        if (name.includes('test')) return 10;
+        return 5;
     }
 
     isRelevantFile(filename) {
