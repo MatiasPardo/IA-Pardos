@@ -1,9 +1,16 @@
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
 const ollamaService = require('../services/ollamaService');
 const sessionService = require('../services/sessionService');
-const chatService = require('../services/chatService');
+const fileService = require('../services/fileService');
 const { authenticate } = require('../middleware/auth');
+
+// Configurar multer para upload de archivos
+const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 50 * 1024 * 1024 } // 50MB max
+});
 
 // Obtener modelos
 router.get('/models', authenticate, async (req, res) => {
@@ -26,26 +33,51 @@ router.post('/session', authenticate, (req, res) => {
     res.json({ sessionId });
 });
 
+// Upload y procesar archivo ZIP
+router.post('/upload', authenticate, upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No se proporcionó archivo' });
+        }
+
+        const { sessionId } = req.body;
+        if (!sessionId) {
+            return res.status(400).json({ error: 'SessionId requerido' });
+        }
+
+        // Procesar el archivo ZIP
+        const fileContent = fileService.processZipFile(req.file.buffer, req.file.originalname);
+        
+        // Guardar contexto en la sesión
+        sessionService.setFileContext(sessionId, fileContent);
+        
+        // Opcional: guardar en disco para persistencia
+        fileService.saveFileContent(sessionId, fileContent);
+
+        res.json({ 
+            message: 'Archivo procesado correctamente',
+            filename: req.file.originalname,
+            filesAnalyzed: fileContent.split('===').length - 1
+        });
+
+    } catch (error) {
+        console.error('Error procesando archivo:', error);
+        res.status(500).json({ error: 'Error procesando archivo ZIP' });
+    }
+});
+
 // Chat con contexto
 router.post('/chat', authenticate, async (req, res) => {
-    const { prompt, model, sessionId, chatId } = req.body;
+    const { prompt, model, sessionId } = req.body;
     const selectedModel = model || 'pardos-assistant:latest';
     
     console.log('Received prompt:', prompt);
     console.log('Using model:', selectedModel);
-    console.log('Chat ID:', chatId);
+    console.log('Session ID:', sessionId);
 
     try {
-        // Obtener contexto del chat si existe
-        let context = '';
-        if (chatId) {
-            const chat = chatService.getChat(req.user.username, chatId);
-            if (chat && chat.messages.length > 0) {
-                context = chat.messages.slice(-5).map(m => 
-                    `Usuario: ${m.message}\nAsistente: ${m.response}`
-                ).join('\n');
-            }
-        }
+        // Obtener contexto de la sesión
+        const context = sessionService.getContext(sessionId);
         
         // Construir prompt con contexto
         const fullPrompt = context ? 
@@ -55,9 +87,9 @@ router.post('/chat', authenticate, async (req, res) => {
         // Generar respuesta
         const reply = await ollamaService.generateResponse(selectedModel, fullPrompt);
         
-        // Guardar en historial de chat
-        if (chatId) {
-            chatService.addMessage(req.user.username, chatId, prompt, reply);
+        // Guardar en sesión
+        if (sessionId) {
+            sessionService.addMessage(sessionId, prompt, reply);
         }
 
         res.json({ reply });

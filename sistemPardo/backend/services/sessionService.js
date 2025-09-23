@@ -10,9 +10,22 @@ class SessionService {
         this.sessions.set(sessionId, {
             messages: [],
             model,
+            fileContext: null,
             createdAt: new Date()
         });
         return sessionId;
+    }
+
+    setFileContext(sessionId, fileContext) {
+        const session = this.sessions.get(sessionId);
+        if (session) {
+            session.fileContext = fileContext;
+        }
+    }
+
+    getFileContext(sessionId) {
+        const session = this.sessions.get(sessionId);
+        return session ? session.fileContext : null;
     }
 
     getSession(sessionId) {
@@ -37,9 +50,19 @@ class SessionService {
         const session = this.sessions.get(sessionId);
         if (!session) return '';
         
-        return session.messages.map(msg => 
+        let context = '';
+        
+        // Agregar contexto del archivo si existe
+        if (session.fileContext) {
+            context += `CONTEXTO DE ARCHIVO:\n${session.fileContext}\n\n`;
+        }
+        
+        // Agregar historial de mensajes
+        context += session.messages.map(msg => 
             `${msg.role}: ${msg.content}`
         ).join('\n');
+        
+        return context;
     }
 }
 
