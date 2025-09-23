@@ -16,7 +16,8 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '200mb' }));
+app.use(express.urlencoded({ limit: '200mb', extended: true }));
 
 console.log("Ollama URL:", process.env.OLLAMA_URL || 'http://ollama:11434');
 
