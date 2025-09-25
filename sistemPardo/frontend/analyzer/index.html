@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AppAnalyzer - Analizador de Aplicaciones</title>
+    <title>InterAnalyzer - Analizador de Aplicaciones de Interbanking</title>
     <style>
 body {
   margin: 0;
@@ -315,7 +315,7 @@ body {
     </div>
     <div class="main-content">
         <div class="chat-header">
-            <h1>AppAnalyzer</h1>
+            <h1>InterAnalyzer</h1>
             <p>Analizador Inteligente de Aplicaciones</p>
         </div>
         
@@ -400,7 +400,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       chatItem.innerHTML = `
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
           <span style="font-size: 1.2rem;">🔍</span>
-          <span style="font-size: 0.8rem; color: #a0a0a0;">AppAnalyzer</span>
+          <span style="font-size: 0.8rem; color: #a0a0a0;">InterAnalyzer</span>
         </div>
         <div class="chat-title">${conv.title}</div>
         <div class="chat-date">${new Date(conv.createdAt).toLocaleDateString()}</div>
@@ -479,7 +479,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     const headerDiv = document.createElement('div');
     headerDiv.className = 'message-header';
-    headerDiv.innerHTML = `<span class="${isUser ? 'user-icon' : 'bot-icon'}"></span>${isUser ? 'Tú' : 'AppAnalyzer'}`;
+    headerDiv.innerHTML = `<span class="${isUser ? 'user-icon' : 'bot-icon'}"></span>${isUser ? 'Tú' : 'InterAnalyzer'}`;
     
     const contentDiv = document.createElement('div');
     contentDiv.innerHTML = isUser ? content : content.replace(/\n/g, '<br>');
@@ -497,7 +497,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     typingDiv.id = 'typing-indicator';
     typingDiv.innerHTML = `
       <div class="message-header">
-        <span class="bot-icon"></span>AppAnalyzer
+        <span class="bot-icon"></span>InterAnalyzer
       </div>
       <div>
         Analizando
@@ -688,7 +688,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   if (conversations.length === 0) {
     setTimeout(() => {
-      addMessage("¡Hola! Soy AppAnalyzer. Sube un archivo ZIP con tu aplicación y podrás hacerme preguntas sobre su arquitectura, código, funcionalidades y más.");
+      addMessage("¡Hola! Soy InterAnalyzer. Sube un archivo ZIP con tu aplicación y podrás hacerme preguntas sobre su arquitectura, código, funcionalidades y más.");
     }, 500);
   }
 });
