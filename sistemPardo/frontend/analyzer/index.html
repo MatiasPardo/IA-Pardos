@@ -382,86 +382,100 @@ document.addEventListener("DOMContentLoaded", async () => {
   const userName = document.getElementById("user-name");
   
   let currentSessionId = null;
-  let conversations = JSON.parse(localStorage.getItem('analyzer-conversations') || '[]');
+  let currentChatId = null;
 
   userName.textContent = username;
   userAvatar.textContent = username.charAt(0).toUpperCase();
 
-  function saveConversations() {
-    localStorage.setItem('analyzer-conversations', JSON.stringify(conversations));
-  }
-
-  function loadConversations() {
-    chatsList.innerHTML = '';
-    conversations.forEach(conv => {
-      const chatItem = document.createElement('div');
-      chatItem.className = `chat-item ${conv.id === currentSessionId ? 'active' : ''}`;
-      chatItem.dataset.chatId = conv.id;
-      chatItem.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-          <span style="font-size: 1.2rem;">🔍</span>
-          <span style="font-size: 0.8rem; color: #a0a0a0;">InterAnalyzer</span>
-        </div>
-        <div class="chat-title">${conv.title}</div>
-        <div class="chat-date">${new Date(conv.createdAt).toLocaleDateString()}</div>
-      `;
-      chatItem.addEventListener('click', () => loadConversation(conv.id));
-      chatsList.appendChild(chatItem);
-    });
-  }
-
-  function createNewConversation(title = 'Nuevo análisis', firstMessage = '') {
-    const id = Date.now().toString();
-    const conversation = {
-      id,
-      title,
-      preview: firstMessage.substring(0, 50) + '...',
-      messages: [],
-      sessionId: null,
-      hasFile: false,
-      createdAt: new Date().toISOString()
-    };
-    conversations.unshift(conversation);
-    currentSessionId = id;
-    saveConversations();
-    loadConversations();
-    clearChat();
-  }
-
-  function loadConversation(id) {
-    const conv = conversations.find(c => c.id === id);
-    if (!conv) return;
-    
-    currentSessionId = id;
-    loadConversations();
-    
-    chatMessages.innerHTML = '';
-    conv.messages.forEach(msg => {
-      addMessage(msg.content, msg.isUser);
-    });
-    
-    chatInput.disabled = !conv.hasFile;
-    chatSend.disabled = !conv.hasFile;
-    
-    if (!conv.hasFile) {
-      fileInfo.textContent = 'Selecciona un archivo ZIP para continuar (máx. 200MB)';
+  async function loadConversations() {
+    try {
+      const response = await fetch('/api/chats?model=pardos-analyzer:latest', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      
+      chatsList.innerHTML = '';
+      data.chats.forEach(chat => {
+        const chatItem = document.createElement('div');
+        chatItem.className = 'chat-item';
+        chatItem.dataset.chatId = chat.id;
+        chatItem.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+            <span style="font-size: 1.2rem;">🔍</span>
+            <span style="font-size: 0.8rem; color: #a0a0a0;">InterAnalyzer</span>
+          </div>
+          <div class="chat-title">${chat.title}</div>
+          <div class="chat-date">${new Date(chat.updatedAt).toLocaleDateString()}</div>
+        `;
+        chatItem.addEventListener('click', () => loadConversation(chat.id));
+        chatsList.appendChild(chatItem);
+      });
+    } catch (error) {
+      console.error('Error loading chats:', error);
     }
   }
 
-  function updateCurrentConversation(userMessage, botMessage) {
-    const conv = conversations.find(c => c.id === currentSessionId);
-    if (conv) {
-      conv.messages.push(
-        { content: userMessage, isUser: true },
-        { content: botMessage, isUser: false }
-      );
-      if (conv.messages.length === 2) {
-        conv.title = userMessage.substring(0, 30) + '...';
-        conv.preview = botMessage.substring(0, 50) + '...';
-      }
-      saveConversations();
+  async function createNewConversation(title = 'Nuevo análisis', firstMessage = '') {
+    try {
+      const response = await fetch('/api/chats', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          title: title,
+          model: 'pardos-analyzer:latest' 
+        })
+      });
+      const data = await response.json();
+      currentChatId = data.chatId;
+      currentSessionId = null;
       loadConversations();
+      clearChat();
+    } catch (error) {
+      console.error('Error creating chat:', error);
     }
+  }
+
+  async function loadConversation(id) {
+    try {
+      const response = await fetch(`/api/chats/${id}?model=pardos-analyzer:latest`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      
+      currentChatId = id;
+      currentSessionId = null;
+      
+      chatMessages.innerHTML = '';
+      data.chat.messages.forEach(msg => {
+        addMessage(msg.message, true);
+        addMessage(msg.response, false);
+      });
+      
+      // Habilitar chat si ya tiene mensajes (asumimos que ya se subió archivo)
+      const hasMessages = data.chat.messages.length > 0;
+      chatInput.disabled = !hasMessages;
+      chatSend.disabled = !hasMessages;
+      
+      if (!hasMessages) {
+        fileInfo.textContent = 'Selecciona un archivo ZIP para continuar (máx. 200MB)';
+      }
+      
+      setActiveChat(id);
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+    }
+  }
+
+  function setActiveChat(chatId) {
+    document.querySelectorAll('.chat-item').forEach(item => {
+      item.classList.remove('active');
+      if (item.dataset.chatId === chatId) {
+        item.classList.add('active');
+      }
+    });
   }
 
   function clearChat() {
@@ -471,6 +485,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     fileInput.value = '';
     uploadBtn.disabled = true;
     fileInfo.textContent = 'Selecciona un archivo ZIP (máx. 200MB)';
+    currentSessionId = null;
   }
 
   function addMessage(content, isUser = false) {
@@ -526,13 +541,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         body: JSON.stringify({ model: 'pardos-analyzer:latest' })
       });
       const data = await response.json();
-      
-      const conv = conversations.find(c => c.id === currentSessionId);
-      if (conv) {
-        conv.sessionId = data.sessionId;
-        saveConversations();
-      }
-      
       return data.sessionId;
     } catch (error) {
       console.error('Error creando sesión:', error);
@@ -557,8 +565,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const file = fileInput.files[0];
     if (!file) return;
 
-    if (!currentSessionId) {
-      createNewConversation(`Análisis: ${file.name}`, 'Analizando aplicación...');
+    if (!currentChatId) {
+      await createNewConversation(`Análisis: ${file.name}`, 'Analizando aplicación...');
     }
 
     uploadBtn.disabled = true;
@@ -567,6 +575,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const sessionId = await createSession();
       if (!sessionId) throw new Error('No se pudo crear sesión');
+      
+      currentSessionId = sessionId;
       
       const formData = new FormData();
       formData.append('file', file);
@@ -593,16 +603,28 @@ document.addEventListener("DOMContentLoaded", async () => {
       const welcomeMessage = `He analizado tu aplicación "${file.name}" y procesado ${result.filesAnalyzed} archivos. Ahora puedes hacerme preguntas sobre su arquitectura, funcionalidades, código o cualquier aspecto técnico.`;
       addMessage(welcomeMessage);
       
-      // Actualizar conversación
-      const conv = conversations.find(c => c.id === currentSessionId);
-      if (conv) {
-        conv.messages.push({ content: welcomeMessage, isUser: false });
-        conv.title = `Análisis: ${file.name}`;
-        conv.preview = welcomeMessage.substring(0, 50) + '...';
-        conv.hasFile = true;
-        saveConversations();
-        loadConversations();
+      // Guardar mensaje de bienvenida en el chat persistente
+      if (currentChatId) {
+        try {
+          await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ 
+              prompt: `Archivo ${file.name} subido`,
+              model: 'pardos-analyzer:latest',
+              sessionId: currentSessionId,
+              chatId: currentChatId
+            })
+          });
+        } catch (error) {
+          console.error('Error saving welcome message:', error);
+        }
       }
+      
+      loadConversations();
       
     } catch (error) {
       console.error('Error:', error);
@@ -613,10 +635,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function handleUserInput() {
     const userInput = chatInput.value.trim();
-    if (!userInput) return;
-
-    const conv = conversations.find(c => c.id === currentSessionId);
-    if (!conv || !conv.sessionId) return;
+    if (!userInput || !currentChatId || !currentSessionId) return;
 
     addMessage(userInput, true);
     showTypingIndicator();
@@ -634,7 +653,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         body: JSON.stringify({ 
           prompt: userInput,
           model: 'pardos-analyzer:latest',
-          sessionId: conv.sessionId
+          sessionId: currentSessionId,
+          chatId: currentChatId
         })
       });
       
@@ -653,7 +673,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       removeTypingIndicator();
       addMessage(data.reply);
       
-      updateCurrentConversation(userInput, data.reply);
+      loadConversations();
       
     } catch (error) {
       removeTypingIndicator();
@@ -686,11 +706,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Cargar conversaciones al inicio
   loadConversations();
   
-  if (conversations.length === 0) {
-    setTimeout(() => {
-      addMessage("¡Hola! Soy InterAnalyzer. Sube un archivo ZIP con tu aplicación y podrás hacerme preguntas sobre su arquitectura, código, funcionalidades y más.");
-    }, 500);
-  }
+  // Mensaje de bienvenida inicial
+  setTimeout(() => {
+    addMessage("¡Hola! Soy InterAnalyzer. Sube un archivo ZIP con tu aplicación y podrás hacerme preguntas sobre su arquitectura, código, funcionalidades y más.");
+  }, 500);
 });
     </script>
 </body>

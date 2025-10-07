@@ -68,12 +68,13 @@ router.post('/upload', authenticate, upload.single('file'), async (req, res) => 
 
 // Chat con contexto
 router.post('/chat', authenticate, async (req, res) => {
-    const { prompt, model, sessionId } = req.body;
+    const { prompt, model, sessionId, chatId } = req.body;
     const selectedModel = model || 'pardos-assistant:latest';
     
     console.log('Received prompt:', prompt);
     console.log('Using model:', selectedModel);
     console.log('Session ID:', sessionId);
+    console.log('Chat ID:', chatId);
 
     try {
         // Obtener contexto de la sesión
@@ -87,9 +88,15 @@ router.post('/chat', authenticate, async (req, res) => {
         // Generar respuesta
         const reply = await ollamaService.generateResponse(selectedModel, fullPrompt);
         
-        // Guardar en sesión
+        // Guardar en sesión temporal
         if (sessionId) {
             sessionService.addMessage(sessionId, prompt, reply);
+        }
+
+        // Guardar en chat persistente
+        if (chatId) {
+            const chatService = require('../services/chatService');
+            chatService.addMessage(req.user.username, chatId, prompt, reply, selectedModel);
         }
 
         res.json({ reply });
